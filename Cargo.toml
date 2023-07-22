@@ -1,0 +1,15 @@
+[package]
+name = "derive_command_line_args"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+
+[dependencies]
+darling = "0.20.1"
+derive_command_line_args_macro = { version = "0.1.0", path = "derive_command_line_args_macro" }
+proc-macro2 = "1.0.63"
+quote = "1.0.29"
+syn = { version = "2.0.23", features = ["full"] }
+uuid = { version = "1.4.0", features = ["serde", "v4"] }
