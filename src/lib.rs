@@ -11,18 +11,20 @@ pub fn add(
 
 trait PostgresDataProvider {
     // fn get(id: &str) -> Self;
-    fn get<T: ?Sized>(receiver: &mut Vec<Box<T>>) -> Self
-    where
-        T: Into<Uuid>;
+    // fn get<T: ?Sized>(receiver: &mut Vec<Box<T>>) -> Self
+    // where
+    //     T: Into<Uuid>;
     fn build_create_table_query();
 }
 
 #[derive(PostgresDataProvider)]
 struct Foo {
     // #[opts(long = "--long")]
-    test: String,
+    string: String,
     // #[opts(short = "-s")]
-    not_test: String,
+    option: std::option::Option<String>,
+    int: std::option::Option<u32>,
+    float: Option<f64>,
     // vec: Vec<String>,
     // mybool: bool,
 }
@@ -37,10 +39,7 @@ mod tests {
 
     #[test]
     fn custom_short_and_long() {
-        let args = vec!["--long", "arggggg1", "-s", "arg2"]
-            .iter()
-            .map(|s| s.to_string())
-            .collect();
+        let args = vec!["--long", "arggggg1", "-s", "arg2"].iter().map(|s| s.to_string()).collect();
 
         let foo = Foo::parse_args(args);
         // assert_eq!(foo.test, "arggggg1");
@@ -49,10 +48,7 @@ mod tests {
 
     #[test]
     fn default_short_and_long_options() {
-        let args = vec!["--test", "arggggg1", "-n", "arg2"]
-            .iter()
-            .map(|s| s.to_string())
-            .collect();
+        let args = vec!["--test", "arggggg1", "-n", "arg2"].iter().map(|s| s.to_string()).collect();
 
         let foo = Foo::parse_args(args);
         // assert_eq!(foo.test, "arggggg1");

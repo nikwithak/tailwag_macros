@@ -1,14 +1,16 @@
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote, quote_spanned};
-use syn::{spanned::Spanned, AttrStyle, Data, DeriveInput, Field, FieldsNamed, LitStr};
+use quote::{format_ident, quote};
+use syn::{Data, DeriveInput, Field, GenericArgument, PathArguments, Type, TypePath};
+
+use crate::utils::extract_option_segment;
 
 fn build_create_table_query(
-    DatabaseQueryBuilder {
+    DatabaseTableDefinition {
         table_name,
         columns,
         ..
-    }: &DatabaseQueryBuilder
-) -> TokenStream {
+    }: &DatabaseTableDefinition
+) -> String {
     let column_toks = columns.iter().map(
         |TableColumn {
              column_name,
@@ -37,16 +39,16 @@ fn build_create_table_query(
     );
     let table_name = format_ident!("{}", table_name);
 
-    let query = quote!(
+    let create_query = quote!(
         CREATE TABLE IF NOT EXISTS #table_name {
             #(#column_toks),*
         }
-    );
-
-    query
+    )
+    .to_string();
+    create_query.replace(", ", ",\n")
 }
 
-enum DatabaseTableType {
+enum DatabaseColumnType {
     Boolean, // BOOL or BOOLEAN
     Int,     // INT
     Float,   // FLOAT
@@ -57,93 +59,141 @@ enum DatabaseTableType {
     Uuid, // UUID
 }
 
-impl DatabaseTableType {
+impl DatabaseColumnType {
     fn as_str(&self) -> &str {
         match self {
-            DatabaseTableType::Boolean => "BOOL",
-            DatabaseTableType::Int => "INT",
-            DatabaseTableType::Float => "FLOAT",
-            DatabaseTableType::String => "VARCHAR",
+            DatabaseColumnType::Boolean => "BOOL",
+            DatabaseColumnType::Int => "INT",
+            DatabaseColumnType::Float => "FLOAT",
+            DatabaseColumnType::String => "VARCHAR",
             #[cfg(timestamp)]
-            DatabaseTableType::Timestamp => "TIMESTAMP",
+            DatabaseColumnType::Timestamp => "TIMESTAMP",
             #[cfg(uuid)]
-            DatabaseTableType::Uuid => "UUID",
+            DatabaseColumnType::Uuid => "UUID",
         }
     }
 }
 
 struct TableColumn {
     column_name: String,
-    column_type: DatabaseTableType,
+    column_type: DatabaseColumnType,
     is_primary_key: bool,
     is_nullable: bool,
     default: Option<String>,
 }
 
-impl From<&Field> for DatabaseTableType {
+impl From<&Field> for DatabaseColumnType {
     fn from(field: &Field) -> Self {
-        println!("{:?}", &field.ty);
-        Self::String
-        // match &field.ty {
-        //     syn::Type::Array(_) => todo!(),
-        //     syn::Type::BareFn(_) => todo!(),
-        //     syn::Type::Group(_) => todo!(),
-        //     syn::Type::ImplTrait(_) => todo!(),
-        //     syn::Type::Infer(_) => todo!(),
-        //     syn::Type::Macro(_) => todo!(),
-        //     syn::Type::Never(_) => todo!(),
-        //     syn::Type::Paren(_) => todo!(),
-        //     syn::Type::Path(path) => {
-        //         println!("{:?}", &path);
-        //         Self::String
-        //     },
-        //     syn::Type::Ptr(_) => todo!(),
-        //     syn::Type::Reference(_) => todo!(),
-        //     syn::Type::Slice(_) => todo!(),
-        //     syn::Type::TraitObject(_) => todo!(),
-        //     syn::Type::Tuple(_) => todo!(),
-        //     syn::Type::Verbatim(_) => todo!(),
-        //     _ => {
-        //         println!("{:?}", &path);
-        //         Self::String
-        //     },
-        // }
+        match &field.ty {
+            syn::Type::Path(typepath) => {
+                fn get_qualified_path(typepath: &TypePath) -> String {
+                    let qualified_path =
+                        typepath.path.segments.iter().fold(String::new(), |mut acc, p| {
+                            acc.push_str(&p.ident.to_string());
+                            acc.push_str("::");
+                            acc
+                        });
+                    qualified_path.trim_end_matches("::").to_string()
+                };
+
+                // Match the type - if it's a supported type, we map it to the DatabaseColumnType. If it's not, we either fail (MVP), or we add support for joins via another trait (must impl DatabaseColumnSubType or something).
+                let mut qualified_path = get_qualified_path(typepath);
+                qualified_path = match qualified_path.as_str() {
+                    "std::option::Option"
+                    | "core::option::Option"
+                    | "option::Option"
+                    | "Option" => {
+                        let type_params = &typepath
+                            .path
+                            .segments
+                            .last()
+                            .expect("Option should have an inner type")
+                            .arguments;
+                        match &type_params {
+                            PathArguments::AngleBracketed(params) => {
+                                let arg =
+                                    params.args.first().expect("No type T found for Option<T>");
+                                match arg {
+                                    GenericArgument::Type(syn::Type::Path(t)) => {
+                                        Some(get_qualified_path(t))
+                                    },
+                                    _ => panic!("no type T found for Option<T>"),
+                                }
+                            },
+                            _ => panic!("No type T found for Option<T>"),
+                        }
+                    },
+                    _ => None,
+                }
+                .unwrap_or(qualified_path);
+
+                let db_type = match qualified_path.as_str() {
+                    "std::string::String" | "string::String" | "String" => {
+                        DatabaseColumnType::String
+                    },
+                    "bool" => DatabaseColumnType::Boolean,
+                    "u32" | "u64" | "i32" | "i64" | "usize" | "isize" => DatabaseColumnType::Int,
+                    "f32" | "f64" | "fsize" => DatabaseColumnType::Float,
+                    #[cfg(timestamp)]
+                    "chrono::_" => DatabaseColumnType::Timestamp,
+                    #[cfg(uuid)]
+                    "uuid::Uuid" | "Uuid" => DatabaseColumnType::Uuid,
+                    _ => {
+                        unimplemented!("{} not a supported type.", qualified_path)
+                    },
+                };
+                db_type
+            },
+            _ => {
+                unimplemented!("Not a supported data type")
+            },
+        }
     }
 }
 
-struct DatabaseQueryBuilder {
+// The details of the Database table. Used to generate the queries for setting up and iteracting with the database.
+struct DatabaseTableDefinition {
     table_name: String,
     columns: Vec<TableColumn>,
 }
 
-impl From<&FieldsNamed> for DatabaseQueryBuilder {
-    fn from(fields: &FieldsNamed) -> Self {
+impl From<&DeriveInput> for DatabaseTableDefinition {
+    fn from(input: &DeriveInput) -> Self {
+        let &DeriveInput {
+            ident,
+            data,
+            ..
+        } = &input;
+
+        // Panic with error message if we get a non-struct
+        let Data::Struct(data) = data else { panic!("Only Structs are supported.") };
+        let syn::Fields::Named(fields) = &data.fields else { panic!("Unnamed fields found in the struct.")};
+
         let columns = fields.named.iter().map(|f| TableColumn {
             column_name: format!("{}", f.ident.as_ref().expect("Found unnamed field in struct")),
-            column_type: DatabaseTableType::from(f),
+            column_type: DatabaseColumnType::from(f),
             is_primary_key: true,
             is_nullable: true,
             default: None,
         });
 
-        DatabaseQueryBuilder {
-            table_name: "TestTable".into(),
+        DatabaseTableDefinition {
+            table_name: ident.to_string(),
             columns: columns.collect(),
         }
     }
 }
 
-pub(crate) fn derive_struct(
-    DeriveInput {
+pub(crate) fn derive_struct(input: &DeriveInput) -> TokenStream {
+    let &DeriveInput {
         ident,
         data,
         ..
-    }: &DeriveInput
-) -> TokenStream {
+    } = &input;
+
     // Panic with error message if we get a non-struct
     let Data::Struct(data) = data else { panic!("Only Structs are supported") };
 
-    // Process all of the fields into tokens
     match &data.fields {
         syn::Fields::Named(fields) => {
             let field_names = fields.named.iter().map(|f| &f.ident);
@@ -199,38 +249,16 @@ pub(crate) fn derive_struct(
 
             // Do I really have to create a new iterator for this?? Seems that way (when using `quote!()`)
             // TODO: See if there's an easier way to do this.
-            let field_names_quoted =
-                field_names.clone().map(|f| format!("{}", &f.as_ref().unwrap()));
-
             let trait_name = format_ident!("{}", "PostgresDataProvider");
-            let table = DatabaseQueryBuilder::from(fields);
-            let query = build_create_table_query(&table).to_string();
+            let table = DatabaseTableDefinition::from(input);
+
+            let query_create = build_create_table_query(&table).to_string();
 
             // Build the actual implementation
             let parse_args_impl_tokens = quote!(
                 impl #trait_name for #ident {
-                    // fn get(id: &str) -> Self {
-                    // fn get<T: ?Sized>(receiver: &mut Vec<Box<T>>) -> Self
-                    //     where T: Into<Uuid> {
-                    //     let mut map = std::collections::HashMap::<String, String>::new();
-                    //     let mut args = args.into_iter();
-
-                    //     // Parse all the args.
-                    //     // TODO: Deal with sub-commands / parameters
-                    //     // Right now we only are pulling in options
-                    //     while let Some(arg) = args.next() {
-                    //         #match_statement
-                    //     }
-
-                    //     // Build and return the final struct
-                    //     #ident {
-                    //         #(#field_names: map.remove(#field_names_quoted).unwrap_or_default(),)*
-                    //     }
-                    // }
-
                     fn build_create_table_query() {
-                        // #println( #query);
-                        println!("{}", #query);
+                        println!("{}", #query_create);
                     }
                 }
             );
