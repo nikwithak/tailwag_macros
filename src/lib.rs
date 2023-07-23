@@ -1,6 +1,6 @@
 use derive_command_line_args_macro::PostgresDataProvider;
-use std::env::Args;
-use uuid::Uuid;
+
+
 
 pub fn add(
     left: usize,
@@ -30,7 +30,7 @@ struct Foo {
 }
 
 impl Foo {
-    pub fn parse_args(args: Vec<String>) {}
+    pub fn parse_args(_args: Vec<String>) {}
 }
 
 #[cfg(test)]
@@ -41,7 +41,7 @@ mod tests {
     fn custom_short_and_long() {
         let args = vec!["--long", "arggggg1", "-s", "arg2"].iter().map(|s| s.to_string()).collect();
 
-        let foo = Foo::parse_args(args);
+        let _foo = Foo::parse_args(args);
         // assert_eq!(foo.test, "arggggg1");
         // assert_eq!(foo.not_test, "arg2");
     }
@@ -50,7 +50,7 @@ mod tests {
     fn default_short_and_long_options() {
         let args = vec!["--test", "arggggg1", "-n", "arg2"].iter().map(|s| s.to_string()).collect();
 
-        let foo = Foo::parse_args(args);
+        let _foo = Foo::parse_args(args);
         // assert_eq!(foo.test, "arggggg1");
         // assert_eq!(foo.not_test, "arg2");
     }
