@@ -1,8 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use syn::{Data, DeriveInput, Field, GenericArgument, PathArguments, Type, TypePath};
-
-use crate::utils::extract_option_segment;
+use syn::{Data, DeriveInput, Field, GenericArgument, PathArguments, TypePath};
 
 fn build_create_table_query(
     DatabaseTableDefinition {
@@ -79,7 +77,7 @@ struct TableColumn {
     column_type: DatabaseColumnType,
     is_primary_key: bool,
     is_nullable: bool,
-    default: Option<String>,
+    _default: Option<String>,
 }
 
 impl From<&Field> for DatabaseColumnType {
@@ -94,7 +92,7 @@ impl From<&Field> for DatabaseColumnType {
                             acc
                         });
                     qualified_path.trim_end_matches("::").to_string()
-                };
+                }
 
                 // Match the type - if it's a supported type, we map it to the DatabaseColumnType. If it's not, we either fail (MVP), or we add support for joins via another trait (must impl DatabaseColumnSubType or something).
                 let mut qualified_path = get_qualified_path(typepath);
@@ -174,7 +172,7 @@ impl From<&DeriveInput> for DatabaseTableDefinition {
             column_type: DatabaseColumnType::from(f),
             is_primary_key: true,
             is_nullable: true,
-            default: None,
+            _default: None,
         });
 
         DatabaseTableDefinition {
@@ -196,10 +194,10 @@ pub(crate) fn derive_struct(input: &DeriveInput) -> TokenStream {
 
     match &data.fields {
         syn::Fields::Named(fields) => {
-            let field_names = fields.named.iter().map(|f| &f.ident);
+            let _field_names = fields.named.iter().map(|f| &f.ident);
 
             // TODO: Use the types for special parsing (e.g. bool, vec, etc.)
-            let field_types = fields.named.iter().map(|f| &f.ty);
+            let _field_types = fields.named.iter().map(|f| &f.ty);
 
             // Build the match statement - first we get each individual match branch for each field
             // let match_args = fields

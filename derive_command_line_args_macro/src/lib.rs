@@ -1,11 +1,10 @@
 mod _derive_builder;
 mod derive_logic;
 mod derive_struct;
-mod utils;
 
 use derive_logic::derive_impl;
 use quote::quote;
-use syn::{parse_macro_input, Data, DataStruct, DeriveInput, Field};
+use syn::parse_macro_input;
 
 #[proc_macro_derive(PostgresDataProvider, attributes(opts))]
 pub fn derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {

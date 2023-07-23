@@ -1,9 +1,8 @@
-use darling::FromDeriveInput;
 use proc_macro2::TokenStream;
-use quote::{quote, TokenStreamExt};
-use syn::{parse_macro_input, Data, DataStruct, DeriveInput, Field};
+use quote::quote;
+use syn::{Data, DeriveInput};
 
-pub fn derive_builder(input: &DeriveInput) -> TokenStream {
+pub fn _derive_builder(input: &DeriveInput) -> TokenStream {
     let &DeriveInput {
         ident,
         data,
@@ -18,20 +17,14 @@ pub fn derive_builder(input: &DeriveInput) -> TokenStream {
 
     match &data.fields {
         syn::Fields::Named(fields) => {
-            let field_names = fields
-                .named
-                .iter()
-                .map(|f| &f.ident);
+            let field_names = fields.named.iter().map(|f| &f.ident);
 
             // Need to clone the iterator, so we can use it for two different interpolations when
             // making `tokens_builder`. Makes the borrow checker happier - is there an easier / better
             // way to do this when using quote!()?
             let field_names_copy = field_names.clone();
 
-            let field_types = fields
-                .named
-                .iter()
-                .map(|f| &f.ty);
+            let field_types = fields.named.iter().map(|f| &f.ty);
             let builder_struct_name = format!("{}Builder", &ident);
             let derive_default = "#[derive(Default)]";
 
