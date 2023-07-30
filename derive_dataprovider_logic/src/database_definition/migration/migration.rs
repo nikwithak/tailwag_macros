@@ -54,7 +54,9 @@ impl AsSql for AlterTable {
             .map(|action| action.as_sql())
             .collect::<Result<Vec<String>, _>>()?
             .iter()
-            .map(|action_sql| format!("ALTER TABLE IF NOT EXISTS {};", &action_sql))
+            .map(|action_sql| {
+                format!("ALTER TABLE IF EXISTS {} {};", self.table_name.as_str(), &action_sql)
+            })
             .collect::<Vec<String>>()
             .join("\n");
 
@@ -91,7 +93,7 @@ impl AsSql for AlterColumnAction {
             AlterColumnAction::SetType(t) => Ok(format!("TYPE {}", t.as_str())),
             AlterColumnAction::SetNullability(nullable) => {
                 #[rustfmt::skip]
-                let verb = if *nullable { "SET" } else { "DROP" };
+                let verb = if *nullable { "DROP" } else { "SET" };
                 Ok(format!("{} NOT NULL", verb))
             },
         }

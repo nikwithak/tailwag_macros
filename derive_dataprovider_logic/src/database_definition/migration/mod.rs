@@ -60,6 +60,7 @@ mod tests {
 
     #[test]
     fn as_sql_generates_sql_script() {
+        // Arrange
         let migration = Migration {
             table_actions: vec![AlterTable {
                 table_name: Identifier::new("my_table".to_string()).unwrap(),
@@ -90,8 +91,29 @@ mod tests {
             }],
         };
 
-        const EXPECTED_SQL: &str =
-            "ALTER TABLE IF EXISTS my_table ALTER COLUMN bool TYPE STRING NONNULL";
+        // Act
+        let result_sql = migration.as_sql().unwrap();
+
+        // Assert
+        // NOTE: This tests is a little finicky - does not account for different whitespace.
+        //       This should be fine, but has room for improvement.
+        let mut queries = result_sql.split("\n").collect::<Vec<&str>>();
+        let mut expected_queries: Vec<&str> = vec![
+            "ALTER TABLE IF EXISTS my_table ALTER COLUMN bool TYPE VARCHAR, ALTER COLUMN bool DROP NOT NULL;",
+            "ALTER TABLE IF EXISTS my_table ALTER COLUMN int TYPE FLOAT;",
+            "ALTER TABLE IF EXISTS my_table ADD COLUMN IF NOT EXISTS  new_column VARCHAR  NOT NULL ;",
+            "ALTER TABLE IF EXISTS my_table ALTER COLUMN string_nullable SET NOT NULL;",
+            "ALTER TABLE IF EXISTS my_table DROP COLUMN IF EXISTS timestamp;",
+        ];
+
+        while !queries.is_empty() && !expected_queries.is_empty() {
+            assert_eq!(queries.pop(), expected_queries.pop());
+        }
+
+        assert!(
+            queries.is_empty() && expected_queries.is_empty(),
+            "Number of queries did not match."
+        );
     }
 
     #[test]
