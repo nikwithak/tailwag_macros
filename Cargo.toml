@@ -1,5 +1,5 @@
 [package]
-name = "derive_command_line_args"
+name = "derive_dataprovider"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,7 +8,8 @@ edition = "2021"
 
 [dependencies]
 darling = "0.20.1"
-derive_command_line_args_macro = { version = "0.1.0", path = "derive_command_line_args_macro" }
+derive_dataprovider_logic = { version = "0.1.0", path = "derive_dataprovider_logic" }
+derive_dataprovider_macros = { version = "0.1.0", path = "derive_dataprovider_macros" }
 proc-macro2 = "1.0.63"
 quote = "1.0.29"
 syn = { version = "2.0.23", features = ["full"] }

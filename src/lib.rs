@@ -1,6 +1,4 @@
-use derive_command_line_args_macro::PostgresDataProvider;
-
-
+pub use derive_dataprovider_macros::PostgresDataProvider;
 
 pub fn add(
     left: usize,
@@ -9,49 +7,44 @@ pub fn add(
     left + right
 }
 
-trait PostgresDataProvider {
+pub trait PostgresDataProvider {
     // fn get(id: &str) -> Self;
     // fn get<T: ?Sized>(receiver: &mut Vec<Box<T>>) -> Self
     // where
     //     T: Into<Uuid>;
-    fn build_create_table_query();
+    fn build_create_table_query() -> String;
+    fn build_list_table_query() -> String;
+    fn build_insert_table_query() -> String;
+    fn make_migrations();
+    // fn get_by_id(id: &Uuid);
+    // fn list(id: &Uuid);
+    // fn update(); // OR self.save()?
+    // save();
+    // fn bulk_save(Vec<T>);
+    // fn get_with_filter(filter: Filter);
+    // fn query_builder() -> QueryBuilder;
 }
 
 #[derive(PostgresDataProvider)]
 struct Foo {
-    // #[opts(long = "--long")]
-    string: String,
-    // #[opts(short = "-s")]
-    option: std::option::Option<String>,
-    int: std::option::Option<u32>,
-    float: Option<f64>,
-    // vec: Vec<String>,
-    // mybool: bool,
+    //     // #[opts(long = "--long")]
+    my_string: String,
+    //     // #[opts(short = "-s")]
+    //     my_option: std::option::Option<String>,
+    //     my_int: std::option::Option<u32>,
+    //     my_float: Option<f64>,
+    //     // vec: Vec<String>,
+    //     // mybool: bool,
 }
 
-impl Foo {
-    pub fn parse_args(_args: Vec<String>) {}
-}
+// impl Foo {
+//     pub fn parse_args(_args: Vec<String>) {}
+// }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
-    fn custom_short_and_long() {
-        let args = vec!["--long", "arggggg1", "-s", "arg2"].iter().map(|s| s.to_string()).collect();
-
-        let _foo = Foo::parse_args(args);
-        // assert_eq!(foo.test, "arggggg1");
-        // assert_eq!(foo.not_test, "arg2");
-    }
-
-    #[test]
-    fn default_short_and_long_options() {
-        let args = vec!["--test", "arggggg1", "-n", "arg2"].iter().map(|s| s.to_string()).collect();
-
-        let _foo = Foo::parse_args(args);
-        // assert_eq!(foo.test, "arggggg1");
-        // assert_eq!(foo.not_test, "arg2");
+    fn it_works() {
+        assert_eq!(1 + 1, 2,);
     }
 }

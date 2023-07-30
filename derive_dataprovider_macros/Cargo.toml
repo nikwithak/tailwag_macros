@@ -2,7 +2,7 @@
 proc-macro = true
 
 [package]
-name = "derive_command_line_args_macro"
+name = "derive_dataprovider_macros"
 version = "0.1.0"
 edition = "2021"
 
@@ -16,6 +16,7 @@ uuid = []
 
 [dependencies]
 darling = "0.20.1"
+derive_dataprovider_logic = { version = "0.1.0", path = "../derive_dataprovider_logic" }
 proc-macro2 = "1.0.63"
 quote = "1.0.29"
 syn = { version = "2.0.23", features = ["full", "parsing"] }
