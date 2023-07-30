@@ -9,8 +9,8 @@ use crate::{
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct RenameTable {
-    before: String,
-    after: String,
+    before: Identifier,
+    after: Identifier,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -126,8 +126,8 @@ impl Migration {
         // Name changed
         if !(before.table_name == after.table_name) {
             actions.push(AlterTableAction::Rename(RenameTable {
-                before: before.table_name.to_string(),
-                after: after.table_name.to_string(),
+                before: before.table_name.clone(),
+                after: after.table_name.clone(),
             }));
         }
 

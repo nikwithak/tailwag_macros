@@ -1,5 +1,8 @@
 use std::ops::Deref;
 
+/// Represents a Database Identifier, for column names and table names.
+/// It's just a string under the hood, but forcing calls to use Identifier::new(String),
+/// we are able to perform field validation.
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub struct Identifier {
     value: String,

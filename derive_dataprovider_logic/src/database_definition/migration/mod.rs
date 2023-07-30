@@ -13,7 +13,7 @@ mod tests {
 
     fn get_before() -> DatabaseTableDefinition {
         DatabaseTableDefinition {
-            table_name: "my_table".to_string(),
+            table_name: Identifier::new("my_table".to_string()).unwrap(),
             columns: vec![
                 TableColumn {
                     column_name: Identifier::new("string_nullable".to_string()).unwrap(),

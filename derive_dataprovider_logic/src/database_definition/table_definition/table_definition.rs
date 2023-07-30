@@ -115,7 +115,7 @@ impl From<&Field> for DatabaseColumnType {
 // The details of the Database table. Used to generate the queries for setting up and iteracting with the database.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct DatabaseTableDefinition {
-    pub table_name: String,
+    pub table_name: Identifier,
     pub columns: Vec<TableColumn>,
 }
 
@@ -146,7 +146,7 @@ impl From<&DeriveInput> for DatabaseTableDefinition {
         });
 
         DatabaseTableDefinition {
-            table_name: ident.to_string(),
+            table_name: Identifier::new(ident.to_string()).expect("Invalid identifier"),
             columns: columns.collect(),
         }
     }
