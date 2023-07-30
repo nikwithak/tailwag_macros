@@ -109,12 +109,6 @@ impl Migration {
         let mut new_column = new_sorted_iter.next();
 
         while old_column.is_some() || new_column.is_some() {
-            println!("=========================");
-            println!("=========================");
-            println!("old: {:?}", old_column);
-            println!("=========================");
-            println!("new: {:?}", new_column);
-            println!("=========================");
             match (old_column, new_column) {
                 (None, Some(new)) => {
                     // new = an entirely new column
@@ -160,9 +154,6 @@ impl Migration {
                 },
                 (None, None) => panic!("Should not ever reach here"),
             }
-            println!("{:?}", &actions);
-            println!("=========================");
-            println!("=========================");
         }
 
         if actions.len() > 0 {
