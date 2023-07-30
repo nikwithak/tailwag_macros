@@ -1,4 +1,9 @@
 pub mod database_definition;
+pub mod queries;
+
+trait AsSql {
+    fn as_sql(&self) -> Result<String, String>;
+}
 
 #[cfg(test)]
 mod tests {

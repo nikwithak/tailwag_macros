@@ -1,4 +1,10 @@
+use std::{ops::Deref, path::Display};
+
 use syn::{Data, DeriveInput, Field, GenericArgument, PathArguments, TypePath};
+
+use crate::AsSql;
+
+use super::Identifier;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum DatabaseColumnType {
@@ -25,12 +31,18 @@ impl DatabaseColumnType {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct TableColumn {
-    pub column_name: String,
+    pub column_name: Identifier,
     pub column_type: DatabaseColumnType,
     // TODO: If this grows too big, add a new type for "ColumnModifiers" or similar
     pub is_primary_key: bool,
     pub is_nullable: bool,
     // _default: Option<String>, // TODO
+}
+
+impl AsSql for TableColumn {
+    fn as_sql(&self) -> Result<String, String> {
+        todo!()
+    }
 }
 
 impl From<&Field> for DatabaseColumnType {
@@ -122,10 +134,11 @@ impl From<&DeriveInput> for DatabaseTableDefinition {
         let columns = fields.named.iter().map(|f| {
             println!("FIELDNAME{}", f.ident.as_ref().expect("Found unnamed field in struct"));
             TableColumn {
-                column_name: format!(
+                column_name: Identifier::new(format!(
                     "{}",
                     f.ident.as_ref().expect("Found unnamed field in struct")
-                ),
+                ))
+                .expect("Invalid column name: {}"),
                 column_type: DatabaseColumnType::from(f),
                 is_primary_key: true,
                 is_nullable: true,

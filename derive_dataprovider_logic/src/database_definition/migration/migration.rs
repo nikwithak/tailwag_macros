@@ -1,7 +1,10 @@
 use std::collections::HashSet;
 
-use crate::database_definition::table_definition::{
-    DatabaseColumnType, DatabaseTableDefinition, TableColumn,
+use crate::{
+    database_definition::table_definition::{
+        DatabaseColumnType, DatabaseTableDefinition, Identifier, TableColumn,
+    },
+    AsSql,
 };
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -20,12 +23,40 @@ pub enum AlterTableAction {
                             // Ref: https://www.postgresql.org/docs/current/sql-altertable.html
 }
 
+impl AsSql for AlterTableAction {
+    fn as_sql(&self) -> Result<String, String> {
+        todo!()
+    }
+}
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct AlterTable {
     // TODO: Always add IF EXISTS, so we won't store it here.
     // Ignore ONLY keyword, no use cases for it at the time.
-    pub table_name: String,
+    pub table_name: Identifier,
     pub actions: Vec<AlterTableAction>,
+}
+
+impl AsSql for AlterTable {
+    fn as_sql(&self) -> Result<String, String> {
+        // Validate table name. Expected snake_case. Does not allow invalid characters.
+        if !self.table_name.chars().all(|c| match c {
+            'a'..='z' | 'A'..='Z' | '0'..='9' | '_' => true,
+            _ => false,
+        }) {
+            return Err("table_name contains invalid characters. Only alphabetic and _ characters are allowed".to_string());
+        }
+
+        let mut statement = "ALTER TABLE IF EXISTS ".to_string();
+        statement.push_str(&self.table_name);
+        statement.push_str(" ");
+        for action in &self.actions {
+            statement.push_str(&action.as_sql()?);
+        }
+
+        statement.push(';');
+        todo!()
+    }
 }
 
 // TODO: Part of _SetStorage() requirement
@@ -53,13 +84,27 @@ pub enum AlterColumnAction {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct AlterColumn {
-    pub column_name: String,
+    pub column_name: Identifier,
     pub actions: Vec<AlterColumnAction>,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Migration {
     pub table_actions: Vec<AlterTable>,
+}
+
+impl AsSql for Migration {
+    fn as_sql(&self) -> Result<String, String> {
+        let mut sql_statments = Vec::new();
+        for alter_table in &self.table_actions {
+            let statement = alter_table.as_sql()?;
+
+            sql_statments.push(statement);
+        }
+
+        let statement = sql_statments.join("\n");
+        Ok(statement)
+    }
 }
 
 impl Migration {
@@ -75,7 +120,7 @@ impl Migration {
     pub fn new_from_table_definitions(
         before: &DatabaseTableDefinition,
         after: &DatabaseTableDefinition,
-    ) -> Option<Self> {
+    ) -> Result<Option<Self>, String> {
         let mut actions = Vec::<AlterTableAction>::new();
 
         // Name changed
@@ -143,7 +188,7 @@ impl Migration {
 
                         if alter_column_actions.len() > 0 {
                             actions.push(AlterTableAction::AlterColumn(AlterColumn {
-                                column_name: new.column_name.to_string(),
+                                column_name: Identifier::new(new.column_name.to_string())?,
                                 actions: alter_column_actions,
                             }));
                         }
@@ -157,14 +202,14 @@ impl Migration {
         }
 
         if actions.len() > 0 {
-            Some(Self {
+            Ok(Some(Self {
                 table_actions: vec![AlterTable {
                     actions,
-                    table_name: before.table_name.to_string(),
+                    table_name: Identifier::new(before.table_name.to_string())?,
                 }],
-            })
+            }))
         } else {
-            None
+            Ok(None)
         }
     }
 }
