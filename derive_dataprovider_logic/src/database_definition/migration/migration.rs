@@ -1,12 +1,17 @@
 use crate::{
     database_definition::{
         migration::{AlterColumn, AlterColumnAction, AlterTableAction},
-        table_definition::{DatabaseColumnType, DatabaseTableDefinition, Identifier, TableColumn},
+        table_definition::{DatabaseTableDefinition, Identifier, TableColumn},
     },
     AsSql,
 };
 
 use super::AlterTable;
+
+pub enum MigrationAction {
+    AlterTableAction(AlterTableAction),
+    NewTable(DatabaseTableDefinition),
+}
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Migration {

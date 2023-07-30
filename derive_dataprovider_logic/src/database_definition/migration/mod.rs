@@ -1,7 +1,9 @@
 mod alter_table;
+mod create_table;
 mod migration;
 
 pub use alter_table::*;
+pub use create_table::*;
 pub use migration::*;
 
 #[cfg(test)]
@@ -16,7 +18,7 @@ mod tests {
         AsSql,
     };
 
-    use super::{migration, Migration};
+    use super::Migration;
 
     fn get_before() -> DatabaseTableDefinition {
         DatabaseTableDefinition {
