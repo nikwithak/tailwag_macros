@@ -5,8 +5,11 @@ pub use migration::*;
 mod tests {
     use migration::{AlterColumn, AlterColumnAction, AlterTable, AlterTableAction};
 
-    use crate::database_definition::table_definition::{
-        DatabaseColumnType, DatabaseTableDefinition, Identifier, TableColumn,
+    use crate::{
+        database_definition::table_definition::{
+            DatabaseColumnType, DatabaseTableDefinition, Identifier, TableColumn,
+        },
+        AsSql,
     };
 
     use super::{migration, Migration};
@@ -53,6 +56,42 @@ mod tests {
                 },
             ],
         }
+    }
+
+    #[test]
+    fn as_sql_generates_sql_script() {
+        let migration = Migration {
+            table_actions: vec![AlterTable {
+                table_name: Identifier::new("my_table".to_string()).unwrap(),
+                actions: vec![
+                    AlterTableAction::AlterColumn(AlterColumn {
+                        column_name: Identifier::new("bool".to_string()).unwrap(),
+                        actions: vec![
+                            AlterColumnAction::SetType(DatabaseColumnType::String),
+                            AlterColumnAction::SetNullability(true),
+                        ],
+                    }),
+                    AlterTableAction::AlterColumn(AlterColumn {
+                        column_name: Identifier::new("int".to_string()).unwrap(),
+                        actions: vec![AlterColumnAction::SetType(DatabaseColumnType::Float)],
+                    }),
+                    AlterTableAction::AddColumn(TableColumn {
+                        column_name: Identifier::new("new_column".to_string()).unwrap(),
+                        column_type: DatabaseColumnType::String,
+                        is_primary_key: false,
+                        is_nullable: false,
+                    }),
+                    AlterTableAction::AlterColumn(AlterColumn {
+                        column_name: Identifier::new("string_nullable".to_string()).unwrap(),
+                        actions: vec![AlterColumnAction::SetNullability(false)],
+                    }),
+                    AlterTableAction::DropColumn(Identifier::new("timestamp".to_string()).unwrap()),
+                ],
+            }],
+        };
+
+        const EXPECTED_SQL: &str =
+            "ALTER TABLE IF EXISTS my_table ALTER COLUMN bool TYPE STRING NONNULL";
     }
 
     #[test]
@@ -123,10 +162,14 @@ mod tests {
                             column_name: Identifier::new("string_nullable".to_string()).unwrap(),
                             actions: vec![AlterColumnAction::SetNullability(false),]
                         }),
-                        AlterTableAction::DropColumn("timestamp".to_string()),
+                        AlterTableAction::DropColumn(
+                            Identifier::new("timestamp".to_string()).unwrap()
+                        ),
                     ],
                 },],
             }
         );
+
+        println!("{}", migration.as_sql().unwrap());
     }
 }

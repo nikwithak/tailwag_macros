@@ -1,49 +1,13 @@
+/// TODO: Move the contents of this file outside, into a macro logic crate.
+///
+/// That was the original point of this crate, but it has evolved into being used as ORM.
 use std::{ops::Deref, path::Display};
 
 use syn::{Data, DeriveInput, Field, GenericArgument, PathArguments, TypePath};
 
 use crate::AsSql;
 
-use super::Identifier;
-
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub enum DatabaseColumnType {
-    Boolean,   // BOOL or BOOLEAN
-    Int,       // INT
-    Float,     // FLOAT
-    String,    // VARCHAR or TEXT
-    Timestamp, // TIMESTAMP
-    Uuid,      // UUID
-}
-
-impl DatabaseColumnType {
-    pub fn as_str(&self) -> &str {
-        match self {
-            DatabaseColumnType::Boolean => "BOOL",
-            DatabaseColumnType::Int => "INT",
-            DatabaseColumnType::Float => "FLOAT",
-            DatabaseColumnType::String => "VARCHAR",
-            DatabaseColumnType::Timestamp => "TIMESTAMP",
-            DatabaseColumnType::Uuid => "UUID",
-        }
-    }
-}
-
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub struct TableColumn {
-    pub column_name: Identifier,
-    pub column_type: DatabaseColumnType,
-    // TODO: If this grows too big, add a new type for "ColumnModifiers" or similar
-    pub is_primary_key: bool,
-    pub is_nullable: bool,
-    // _default: Option<String>, // TODO
-}
-
-impl AsSql for TableColumn {
-    fn as_sql(&self) -> Result<String, String> {
-        todo!()
-    }
-}
+use super::{DatabaseColumnType, DatabaseTableDefinition, Identifier, TableColumn};
 
 impl From<&Field> for DatabaseColumnType {
     fn from(field: &Field) -> Self {
@@ -112,13 +76,7 @@ impl From<&Field> for DatabaseColumnType {
     }
 }
 
-// The details of the Database table. Used to generate the queries for setting up and iteracting with the database.
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub struct DatabaseTableDefinition {
-    pub table_name: Identifier,
-    pub columns: Vec<TableColumn>,
-}
-
+// TODO: Move this outside of this library (which is becoming more of an ORM)
 impl From<&DeriveInput> for DatabaseTableDefinition {
     fn from(input: &DeriveInput) -> Self {
         let &DeriveInput {

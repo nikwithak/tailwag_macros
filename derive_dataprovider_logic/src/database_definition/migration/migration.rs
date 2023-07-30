@@ -1,5 +1,7 @@
 use std::collections::HashSet;
 
+use syn::Ident;
+
 use crate::{
     database_definition::table_definition::{
         DatabaseColumnType, DatabaseTableDefinition, Identifier, TableColumn,
@@ -8,16 +10,10 @@ use crate::{
 };
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct RenameTable {
-    before: Identifier,
-    after: Identifier,
-}
-
-#[derive(Clone, PartialEq, Eq, Debug)]
 pub enum AlterTableAction {
-    Rename(RenameTable),
+    Rename(Identifier),
     AddColumn(TableColumn), // TODO
-    DropColumn(String),     // TODO
+    DropColumn(Identifier), // TODO
     AlterColumn(AlterColumn), // TODO
                             // TODO: Add the rest of the actions.
                             // Ref: https://www.postgresql.org/docs/current/sql-altertable.html
@@ -25,14 +21,19 @@ pub enum AlterTableAction {
 
 impl AsSql for AlterTableAction {
     fn as_sql(&self) -> Result<String, String> {
-        todo!()
+        match self {
+            AlterTableAction::Rename(ident) => Ok(format!("RENAME TO {}", ident)),
+            AlterTableAction::AddColumn(table_column) => {
+                Ok(format!("ADD COLUMN IF NOT EXISTS {}", table_column.as_sql()?))
+            },
+            AlterTableAction::DropColumn(ident) => Ok(format!("DROP COLUMN IF EXISTS {}", ident)),
+            AlterTableAction::AlterColumn(alter_column) => alter_column.as_sql(),
+        }
     }
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct AlterTable {
-    // TODO: Always add IF EXISTS, so we won't store it here.
-    // Ignore ONLY keyword, no use cases for it at the time.
     pub table_name: Identifier,
     pub actions: Vec<AlterTableAction>,
 }
@@ -47,15 +48,17 @@ impl AsSql for AlterTable {
             return Err("table_name contains invalid characters. Only alphabetic and _ characters are allowed".to_string());
         }
 
-        let mut statement = "ALTER TABLE IF EXISTS ".to_string();
-        statement.push_str(&self.table_name);
-        statement.push_str(" ");
-        for action in &self.actions {
-            statement.push_str(&action.as_sql()?);
-        }
+        let statements = self
+            .actions
+            .iter()
+            .map(|action| action.as_sql())
+            .collect::<Result<Vec<String>, _>>()?
+            .iter()
+            .map(|action_sql| format!("ALTER TABLE IF NOT EXISTS {};", &action_sql))
+            .collect::<Vec<String>>()
+            .join("\n");
 
-        statement.push(';');
-        todo!()
+        Ok(statements)
     }
 }
 
@@ -82,10 +85,39 @@ pub enum AlterColumnAction {
                                  // _SetCompression(_CompressionMethod), // TODO: Unsupported yet
 }
 
+impl AsSql for AlterColumnAction {
+    fn as_sql(&self) -> Result<String, String> {
+        match self {
+            AlterColumnAction::SetType(t) => Ok(format!("TYPE {}", t.as_str())),
+            AlterColumnAction::SetNullability(nullable) => {
+                #[rustfmt::skip]
+                let verb = if *nullable { "SET" } else { "DROP" };
+                Ok(format!("{} NOT NULL", verb))
+            },
+        }
+    }
+}
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct AlterColumn {
     pub column_name: Identifier,
     pub actions: Vec<AlterColumnAction>,
+}
+
+impl AsSql for AlterColumn {
+    fn as_sql(&self) -> Result<String, String> {
+        let actions_sql = self
+            .actions
+            .iter()
+            .map(|action| action.as_sql())
+            .collect::<Result<Vec<String>, _>>()?
+            .iter()
+            .map(|action| format!("ALTER COLUMN {} {}", &self.column_name, &action))
+            .collect::<Vec<String>>()
+            .join(", ");
+
+        Ok(actions_sql)
+    }
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -125,10 +157,7 @@ impl Migration {
 
         // Name changed
         if !(before.table_name == after.table_name) {
-            actions.push(AlterTableAction::Rename(RenameTable {
-                before: before.table_name.clone(),
-                after: after.table_name.clone(),
-            }));
+            actions.push(AlterTableAction::Rename(after.table_name.clone()));
         }
 
         // Figure out added / removed / changed columns
@@ -162,12 +191,12 @@ impl Migration {
                 },
                 (Some(old), None) => {
                     // old = removed (we never found a match)
-                    actions.push(AlterTableAction::DropColumn(old.column_name.to_string()));
+                    actions.push(AlterTableAction::DropColumn(old.column_name.clone()));
                     old_column = old_sorted_iter.next();
                 },
                 (Some(old), Some(new)) => match old.column_name.cmp(&new.column_name) {
                     std::cmp::Ordering::Less => {
-                        actions.push(AlterTableAction::DropColumn(old.column_name.to_string()));
+                        actions.push(AlterTableAction::DropColumn(old.column_name.clone()));
                         old_column = old_sorted_iter.next();
                     },
                     std::cmp::Ordering::Greater => {
