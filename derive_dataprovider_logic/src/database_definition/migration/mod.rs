@@ -1,13 +1,17 @@
+mod alter_table;
 mod migration;
+
+pub use alter_table::*;
 pub use migration::*;
 
 #[cfg(test)]
 mod tests {
-    use migration::{AlterColumn, AlterColumnAction, AlterTable, AlterTableAction};
-
     use crate::{
-        database_definition::table_definition::{
-            DatabaseColumnType, DatabaseTableDefinition, Identifier, TableColumn,
+        database_definition::{
+            migration::{AlterColumn, AlterColumnAction, AlterTable, AlterTableAction},
+            table_definition::{
+                DatabaseColumnType, DatabaseTableDefinition, Identifier, TableColumn,
+            },
         },
         AsSql,
     };
