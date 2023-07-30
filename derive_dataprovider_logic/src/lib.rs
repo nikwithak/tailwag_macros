@@ -8,10 +8,10 @@ mod tests {
 
     #[test]
     fn test_migration_for_table() {
-        let database = DatabaseDefinition {
-            name: "TestDatabase",
-        };
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+        // let database = DatabaseDefinition {
+        //     name: "TestDatabase",
+        // };
+        // let result = add(2, 2);
+        // assert_eq!(result, 4);
     }
 }

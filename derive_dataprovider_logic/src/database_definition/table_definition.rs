@@ -1,15 +1,13 @@
 use syn::{Data, DeriveInput, Field, GenericArgument, PathArguments, TypePath};
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub enum DatabaseColumnType {
-    Boolean, // BOOL or BOOLEAN
-    Int,     // INT
-    Float,   // FLOAT
-    String,  // VARCHAR or TEXT
-    #[cfg(timestamp)]
+    Boolean,   // BOOL or BOOLEAN
+    Int,       // INT
+    Float,     // FLOAT
+    String,    // VARCHAR or TEXT
     Timestamp, // TIMESTAMP
-    #[cfg(uuid)]
-    Uuid, // UUID
+    Uuid,      // UUID
 }
 
 impl DatabaseColumnType {
@@ -19,22 +17,20 @@ impl DatabaseColumnType {
             DatabaseColumnType::Int => "INT",
             DatabaseColumnType::Float => "FLOAT",
             DatabaseColumnType::String => "VARCHAR",
-            #[cfg(timestamp)]
             DatabaseColumnType::Timestamp => "TIMESTAMP",
-            #[cfg(uuid)]
             DatabaseColumnType::Uuid => "UUID",
         }
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct TableColumn {
     pub column_name: String,
     pub column_type: DatabaseColumnType,
     // TODO: If this grows too big, add a new type for "ColumnModifiers" or similar
     pub is_primary_key: bool,
     pub is_nullable: bool,
-    _default: Option<String>,
+    // _default: Option<String>, // TODO
 }
 
 impl From<&Field> for DatabaseColumnType {
@@ -89,9 +85,7 @@ impl From<&Field> for DatabaseColumnType {
                     "bool" => DatabaseColumnType::Boolean,
                     "u32" | "u64" | "i32" | "i64" | "usize" | "isize" => DatabaseColumnType::Int,
                     "f32" | "f64" | "fsize" => DatabaseColumnType::Float,
-                    #[cfg(timestamp)]
                     "chrono::_" => DatabaseColumnType::Timestamp,
-                    #[cfg(uuid)]
                     "uuid::Uuid" | "Uuid" => DatabaseColumnType::Uuid,
                     _ => {
                         unimplemented!("{} not a supported type.", qualified_path)
@@ -107,6 +101,7 @@ impl From<&Field> for DatabaseColumnType {
 }
 
 // The details of the Database table. Used to generate the queries for setting up and iteracting with the database.
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct DatabaseTableDefinition {
     pub table_name: String,
     pub columns: Vec<TableColumn>,
@@ -125,7 +120,6 @@ impl From<&DeriveInput> for DatabaseTableDefinition {
         let syn::Fields::Named(fields) = &data.fields else { panic!("Unnamed fields found in the struct.")};
 
         let columns = fields.named.iter().map(|f| {
-            println!("{:?}", &f);
             println!("FIELDNAME{}", f.ident.as_ref().expect("Found unnamed field in struct"));
             TableColumn {
                 column_name: format!(
@@ -135,7 +129,6 @@ impl From<&DeriveInput> for DatabaseTableDefinition {
                 column_type: DatabaseColumnType::from(f),
                 is_primary_key: true,
                 is_nullable: true,
-                _default: None,
             }
         });
 
