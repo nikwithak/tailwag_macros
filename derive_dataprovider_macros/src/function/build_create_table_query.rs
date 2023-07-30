@@ -1,6 +1,7 @@
+use derive_dataprovider_logic::database_definition::table_definition::{
+    DatabaseTableDefinition, TableColumn,
+};
 use quote::{format_ident, quote};
-
-use crate::database_definition::{DatabaseTableDefinition, TableColumn};
 
 pub fn build_create_table_query(
     DatabaseTableDefinition {

@@ -27,6 +27,7 @@ struct AlterTable {
     actions: Vec<AlterTableAction>,
 }
 
+// TODO: Part of _SetStorage() requirement
 // enum StorageType {
 //     Plain,
 //     External,

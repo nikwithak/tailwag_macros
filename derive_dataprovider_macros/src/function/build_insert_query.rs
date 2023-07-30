@@ -1,6 +1,8 @@
 use quote::{format_ident, quote};
 
-use crate::database_definition::{DatabaseTableDefinition, TableColumn};
+use derive_dataprovider_logic::database_definition::{
+    self, table_definition::DatabaseTableDefinition,
+};
 
 pub fn build_insert_query(
     DatabaseTableDefinition {
