@@ -1,7 +1,3 @@
-use std::collections::HashSet;
-
-use syn::Ident;
-
 use crate::{
     database_definition::table_definition::{
         DatabaseColumnType, DatabaseTableDefinition, Identifier, TableColumn,

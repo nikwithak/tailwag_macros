@@ -1,5 +1,3 @@
-use std::ptr::null;
-
 use crate::AsSql;
 
 use super::Identifier;

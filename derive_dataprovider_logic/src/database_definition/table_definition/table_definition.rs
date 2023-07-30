@@ -1,11 +1,7 @@
 /// TODO: Move the contents of this file outside, into a macro logic crate.
 ///
 /// That was the original point of this crate, but it has evolved into being used as ORM.
-use std::{ops::Deref, path::Display};
-
 use syn::{Data, DeriveInput, Field, GenericArgument, PathArguments, TypePath};
-
-use crate::AsSql;
 
 use super::{DatabaseColumnType, DatabaseTableDefinition, Identifier, TableColumn};
 
