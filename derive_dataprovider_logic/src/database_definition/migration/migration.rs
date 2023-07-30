@@ -1,27 +1,42 @@
 use crate::{
     database_definition::{
+        database_definition::DatabaseDefinition,
         migration::{AlterColumn, AlterColumnAction, AlterTableAction},
         table_definition::{DatabaseTableDefinition, Identifier, TableColumn},
     },
     AsSql,
 };
 
-use super::AlterTable;
+use super::{AlterTable, CreateTable};
 
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub enum MigrationAction {
-    AlterTableAction(AlterTableAction),
-    NewTable(DatabaseTableDefinition),
+    AlterTable(AlterTable),
+    CreateTable(CreateTable),
+    DropTable(Identifier),
+}
+
+impl AsSql for MigrationAction {
+    fn as_sql(&self) -> Result<String, String> {
+        match self {
+            MigrationAction::AlterTable(alter_table) => alter_table.as_sql(),
+            MigrationAction::CreateTable(create_table) => create_table.as_sql(),
+            MigrationAction::DropTable(table_ident) => {
+                Ok(format!("DROP TABLE IF EXISTS {};", &table_ident))
+            },
+        }
+    }
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Migration {
-    pub table_actions: Vec<AlterTable>,
+    pub actions: Vec<MigrationAction>,
 }
 
 impl AsSql for Migration {
     fn as_sql(&self) -> Result<String, String> {
         let mut sql_statments = Vec::new();
-        for alter_table in &self.table_actions {
+        for alter_table in &self.actions {
             let statement = alter_table.as_sql()?;
 
             sql_statments.push(statement);
@@ -33,6 +48,63 @@ impl AsSql for Migration {
 }
 
 impl Migration {
+    pub fn make_migrations(
+        before: Option<DatabaseDefinition>,
+        after: DatabaseDefinition,
+    ) -> Self {
+        let mut migrations = Vec::new();
+        if let Some(before) = before {
+            let mut before_tables_sorted =
+                before.tables.iter().collect::<Vec<&DatabaseTableDefinition>>();
+            before_tables_sorted.sort_by(|l, r| l.table_name.cmp(&r.table_name));
+            let mut after_tables_sorted =
+                before.tables.iter().collect::<Vec<&DatabaseTableDefinition>>();
+            after_tables_sorted.sort_by(|l, r| l.table_name.cmp(&r.table_name));
+
+            let mut old_sorted_iter = before_tables_sorted.iter();
+            let mut new_sorted_iter = after_tables_sorted.iter();
+
+            // Now that they're sorted, walk both and build actions based on conflicts. Same approach as compare_tables below.
+            let mut old_table = old_sorted_iter.next();
+            let mut new_table = new_sorted_iter.next();
+
+            let mut actions: Vec<MigrationAction> = Vec::new();
+            while old_table.is_some() || new_table.is_some() {
+                match (old_table, new_table) {
+                    (None, Some(new)) => {
+                        // new = an entirely new table
+                        actions
+                            .push(MigrationAction::CreateTable(CreateTable::new((*new).clone())));
+                        new_table = new_sorted_iter.next();
+                    },
+                    (Some(old), None) => {
+                        // old = removed (we never found a match)
+                        actions.push(MigrationAction::DropTable(old.table_name.clone()));
+                        old_table = old_sorted_iter.next();
+                    },
+                    (Some(old), Some(new)) => {
+                        // TODO: Make this better - need to remove unwraps.
+                        if let Some(mut migration) = Self::compare_tables(old, new).unwrap() {
+                            actions.append(&mut migration.actions);
+                        }
+                    },
+                    (None, None) => panic!("Should not ever reach here"),
+                }
+            }
+        } else {
+            // New database - only creates!
+            let mut create_table_actions = after
+                .tables
+                .iter()
+                .map(|t| MigrationAction::CreateTable(CreateTable::new(t.clone())))
+                .collect();
+            migrations.append(&mut create_table_actions);
+        }
+        Self {
+            actions: migrations,
+        }
+    }
+
     /// Returns `Some<Migration>` representing the steps required to go from `before` to `after`, or None if the inputs are the same.
     ///
     /// # Arguments
@@ -42,7 +114,7 @@ impl Migration {
     ///
     /// # Returns
     ///
-    pub fn new_from_table_definitions(
+    pub fn compare_tables(
         before: &DatabaseTableDefinition,
         after: &DatabaseTableDefinition,
     ) -> Result<Option<Self>, String> {
@@ -125,10 +197,10 @@ impl Migration {
 
         if actions.len() > 0 {
             Ok(Some(Self {
-                table_actions: vec![AlterTable {
+                actions: vec![MigrationAction::AlterTable(AlterTable {
                     actions,
                     table_name: Identifier::new(before.table_name.to_string())?,
-                }],
+                })],
             }))
         } else {
             Ok(None)

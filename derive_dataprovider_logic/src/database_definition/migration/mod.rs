@@ -10,7 +10,9 @@ pub use migration::*;
 mod tests {
     use crate::{
         database_definition::{
-            migration::{AlterColumn, AlterColumnAction, AlterTable, AlterTableAction},
+            migration::{
+                AlterColumn, AlterColumnAction, AlterTable, AlterTableAction, MigrationAction,
+            },
             table_definition::{
                 DatabaseColumnType, DatabaseTableDefinition, Identifier, TableColumn,
             },
@@ -68,7 +70,7 @@ mod tests {
     fn as_sql_generates_sql_script() {
         // Arrange
         let migration = Migration {
-            table_actions: vec![AlterTable {
+            actions: vec![MigrationAction::AlterTable(AlterTable {
                 table_name: Identifier::new("my_table".to_string()).unwrap(),
                 actions: vec![
                     AlterTableAction::AlterColumn(AlterColumn {
@@ -94,7 +96,7 @@ mod tests {
                     }),
                     AlterTableAction::DropColumn(Identifier::new("timestamp".to_string()).unwrap()),
                 ],
-            }],
+            })],
         };
 
         // Act
@@ -160,13 +162,13 @@ mod tests {
             .collect();
 
         // Act
-        let migration = Migration::new_from_table_definitions(&before, &after).unwrap().unwrap();
+        let migration = Migration::compare_tables(&before, &after).unwrap().unwrap();
 
         // Assert
         assert_eq!(
             migration,
             Migration {
-                table_actions: vec![AlterTable {
+                actions: vec![MigrationAction::AlterTable(AlterTable {
                     table_name: Identifier::new("my_table".to_string()).unwrap(),
                     actions: vec![
                         AlterTableAction::AlterColumn(AlterColumn {
@@ -194,7 +196,7 @@ mod tests {
                             Identifier::new("timestamp".to_string()).unwrap()
                         ),
                     ],
-                },],
+                })],
             }
         );
 
