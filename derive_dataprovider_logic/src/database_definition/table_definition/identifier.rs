@@ -26,7 +26,8 @@ impl std::fmt::Display for Identifier {
 }
 
 impl Identifier {
-    pub fn new(value: String) -> Result<Self, &'static str> {
+    pub fn new<S: Into<String>>(value: S) -> Result<Self, &'static str> {
+        let value: String = value.into();
         if value.chars().all(|c| match c {
             'a'..='z' | 'A'..='Z' | '0'..='9' | '_' => true,
             _ => false,

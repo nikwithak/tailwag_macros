@@ -11,6 +11,10 @@ impl CreateTable {
             table_definition: table,
         }
     }
+
+    pub fn table_definition(&self) -> &DatabaseTableDefinition {
+        &self.table_definition
+    }
 }
 
 impl AsSql for CreateTable {

@@ -48,45 +48,76 @@ impl AsSql for Migration {
 }
 
 impl Migration {
-    pub fn make_migrations(
-        before: Option<DatabaseDefinition>,
-        after: DatabaseDefinition,
-    ) -> Self {
-        let mut migrations = Vec::new();
+    pub fn compare(
+        before: Option<&DatabaseDefinition>,
+        after: &DatabaseDefinition,
+    ) -> Option<Self> {
+        let mut actions: Vec<MigrationAction> = Vec::new();
         if let Some(before) = before {
             let mut before_tables_sorted =
                 before.tables.iter().collect::<Vec<&DatabaseTableDefinition>>();
             before_tables_sorted.sort_by(|l, r| l.table_name.cmp(&r.table_name));
             let mut after_tables_sorted =
-                before.tables.iter().collect::<Vec<&DatabaseTableDefinition>>();
+                after.tables.iter().collect::<Vec<&DatabaseTableDefinition>>();
             after_tables_sorted.sort_by(|l, r| l.table_name.cmp(&r.table_name));
 
             let mut old_sorted_iter = before_tables_sorted.iter();
             let mut new_sorted_iter = after_tables_sorted.iter();
 
             // Now that they're sorted, walk both and build actions based on conflicts. Same approach as compare_tables below.
+            // TODO: DRY out the walking pattern. It'll also save time if I move it from a sorting approach to a bucketed approach to improve CPU time
+            // Sorting = O(nlog(n)), Bucketing would be O(n). Might not even need that, could change table def to be a HM
+            // Not *very* important for this use, since it's meant to be run only during build & deploy, not at runtime.
             let mut old_table = old_sorted_iter.next();
             let mut new_table = new_sorted_iter.next();
 
-            let mut actions: Vec<MigrationAction> = Vec::new();
             while old_table.is_some() || new_table.is_some() {
                 match (old_table, new_table) {
                     (None, Some(new)) => {
                         // new = an entirely new table
                         actions
                             .push(MigrationAction::CreateTable(CreateTable::new((*new).clone())));
+                        println!("new: {:?}", &new_table);
+                        println!("old: {:?}", &old_table);
                         new_table = new_sorted_iter.next();
                     },
                     (Some(old), None) => {
                         // old = removed (we never found a match)
                         actions.push(MigrationAction::DropTable(old.table_name.clone()));
+                        println!("new: {:?}", &new_table);
+                        println!("old: {:?}", &old_table);
                         old_table = old_sorted_iter.next();
                     },
                     (Some(old), Some(new)) => {
-                        // TODO: Make this better - need to remove unwraps.
-                        if let Some(mut migration) = Self::compare_tables(old, new).unwrap() {
-                            actions.append(&mut migration.actions);
+                        match old.table_name.cmp(&new.table_name) {
+                            std::cmp::Ordering::Less => {
+                                // Old table comes first, and has been deleted.
+                                actions.push(MigrationAction::DropTable(old.table_name.clone()));
+                                // TODO: Remove all the println!s here. Maybe convert them to debug? Definitely move it to top of thing so it's only called once.
+                                println!("new: {:?}", &new_table);
+                                println!("old: {:?}", &old_table);
+                                old_table = old_sorted_iter.next();
+                            },
+                            std::cmp::Ordering::Equal => {
+                                if let Some(mut migration) = Self::compare_tables(old, new) {
+                                    // Same table with modifications - no action if both tables aren't there.
+                                    actions.append(&mut migration.actions);
+                                }
+                                old_table = old_sorted_iter.next();
+                                new_table = new_sorted_iter.next();
+                            },
+                            std::cmp::Ordering::Greater => {
+                                // New table!
+                                actions.push(MigrationAction::CreateTable(CreateTable::new(
+                                    (*new).clone(),
+                                )));
+                                println!("new: {:?}", &new_table);
+                                println!("old: {:?}", &old_table);
+                                new_table = new_sorted_iter.next();
+                            },
                         }
+                        println!("new: {:?}", &new_table);
+                        println!("old: {:?}", &old_table);
                     },
                     (None, None) => panic!("Should not ever reach here"),
                 }
@@ -98,10 +129,14 @@ impl Migration {
                 .iter()
                 .map(|t| MigrationAction::CreateTable(CreateTable::new(t.clone())))
                 .collect();
-            migrations.append(&mut create_table_actions);
+            actions.append(&mut create_table_actions);
         }
-        Self {
-            actions: migrations,
+        if !actions.is_empty() {
+            Some(Self {
+                actions,
+            })
+        } else {
+            None
         }
     }
 
@@ -114,10 +149,10 @@ impl Migration {
     ///
     /// # Returns
     ///
-    pub fn compare_tables(
+    fn compare_tables(
         before: &DatabaseTableDefinition,
         after: &DatabaseTableDefinition,
-    ) -> Result<Option<Self>, String> {
+    ) -> Option<Self> {
         let mut actions = Vec::<AlterTableAction>::new();
 
         // Name changed
@@ -152,23 +187,34 @@ impl Migration {
                 (None, Some(new)) => {
                     // new = an entirely new column
                     actions.push(AlterTableAction::AddColumn(new.clone()));
+                    println!("    new: {:?}", &new_column);
+                    println!("    old: {:?}", &old_column);
                     new_column = new_sorted_iter.next();
                 },
                 (Some(old), None) => {
                     // old = removed (we never found a match)
                     actions.push(AlterTableAction::DropColumn(old.column_name.clone()));
+                    println!("    new: {:?}", &new_column);
+                    println!("    old: {:?}", &old_column);
                     old_column = old_sorted_iter.next();
                 },
                 (Some(old), Some(new)) => match old.column_name.cmp(&new.column_name) {
                     std::cmp::Ordering::Less => {
+                        println!("    new: {:?}", &new_column);
+                        println!("    old: {:?}", &old_column);
                         actions.push(AlterTableAction::DropColumn(old.column_name.clone()));
                         old_column = old_sorted_iter.next();
                     },
                     std::cmp::Ordering::Greater => {
+                        println!("    new: {:?}", &new_column);
+                        println!("    old: {:?}", &old_column);
                         actions.push(AlterTableAction::AddColumn(new.clone()));
                         new_column = new_sorted_iter.next();
                     },
                     std::cmp::Ordering::Equal => {
+                        println!("    new: {:?}", &new_column);
+                        println!("    old: {:?}", &old_column);
+
                         // TODO move this logic into TableColumn? Or AlterColumnAction?
                         let mut alter_column_actions = Vec::new();
                         if !old.column_type.eq(&new.column_type) {
@@ -182,7 +228,7 @@ impl Migration {
 
                         if alter_column_actions.len() > 0 {
                             actions.push(AlterTableAction::AlterColumn(AlterColumn {
-                                column_name: Identifier::new(new.column_name.to_string())?,
+                                column_name: new.column_name.clone(),
                                 actions: alter_column_actions,
                             }));
                         }
@@ -196,14 +242,17 @@ impl Migration {
         }
 
         if actions.len() > 0 {
-            Ok(Some(Self {
+            println!("=====   RESULT   =====");
+            println!("{:?}", &actions);
+            println!("===== END RESULT =====");
+            Some(Self {
                 actions: vec![MigrationAction::AlterTable(AlterTable {
                     actions,
-                    table_name: Identifier::new(before.table_name.to_string())?,
+                    table_name: before.table_name.clone(),
                 })],
-            }))
+            })
         } else {
-            Ok(None)
+            None
         }
     }
 }
