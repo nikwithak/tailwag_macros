@@ -2,7 +2,7 @@ pub mod database_definition;
 pub mod queries;
 
 trait AsSql {
-    fn as_sql(&self) -> Result<String, String>;
+    fn as_sql(&self) -> String;
 }
 
 #[cfg(test)]

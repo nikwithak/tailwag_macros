@@ -14,7 +14,7 @@ impl CreateTable {
 }
 
 impl AsSql for CreateTable {
-    fn as_sql(&self) -> Result<String, String> {
+    fn as_sql(&self) -> String {
         let mut sql = format!(
             "CREATE TABLE IF NOT EXISTS {} {{\n",
             self.table_definition.table_name.as_str()
@@ -24,13 +24,13 @@ impl AsSql for CreateTable {
             .columns
             .iter()
             .map(|col| col.as_sql())
-            .collect::<Result<Vec<String>, _>>()?
+            .collect::<Vec<String>>()
             .join(",\n");
 
         sql.push_str(&columns_sql);
         sql.push_str("\n};");
 
-        Ok(sql)
+        sql
     }
 }
 
@@ -97,7 +97,7 @@ mod test {
         };
 
         // Act
-        let queries = create_table.as_sql().unwrap();
+        let queries = create_table.as_sql();
         // let mut queries = result_sql.split("\n").collect::<Vec<&str>>();
 
         #[rustfmt::skip]

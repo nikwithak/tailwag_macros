@@ -100,7 +100,7 @@ mod tests {
         };
 
         // Act
-        let result_sql = migration.as_sql().unwrap();
+        let result_sql = migration.as_sql();
 
         // Assert
         // NOTE: This tests is a little finicky - does not account for different whitespace.
@@ -200,6 +200,6 @@ mod tests {
             }
         );
 
-        println!("{}", migration.as_sql().unwrap());
+        println!("{}", migration.as_sql());
     }
 }

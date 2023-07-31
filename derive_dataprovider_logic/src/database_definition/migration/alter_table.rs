@@ -14,13 +14,13 @@ pub enum AlterTableAction {
 }
 
 impl AsSql for AlterTableAction {
-    fn as_sql(&self) -> Result<String, String> {
+    fn as_sql(&self) -> String {
         match self {
-            AlterTableAction::Rename(ident) => Ok(format!("RENAME TO {}", ident)),
+            AlterTableAction::Rename(ident) => format!("RENAME TO {}", ident),
             AlterTableAction::AddColumn(table_column) => {
-                Ok(format!("ADD COLUMN IF NOT EXISTS {}", table_column.as_sql()?))
+                format!("ADD COLUMN IF NOT EXISTS {}", table_column.as_sql())
             },
-            AlterTableAction::DropColumn(ident) => Ok(format!("DROP COLUMN IF EXISTS {}", ident)),
+            AlterTableAction::DropColumn(ident) => format!("DROP COLUMN IF EXISTS {}", ident),
             AlterTableAction::AlterColumn(alter_column) => alter_column.as_sql(),
         }
     }
@@ -33,20 +33,12 @@ pub struct AlterTable {
 }
 
 impl AsSql for AlterTable {
-    fn as_sql(&self) -> Result<String, String> {
-        // Validate table name. Expected snake_case. Does not allow invalid characters.
-        if !self.table_name.chars().all(|c| match c {
-            'a'..='z' | 'A'..='Z' | '0'..='9' | '_' => true,
-            _ => false,
-        }) {
-            return Err("table_name contains invalid characters. Only alphabetic and _ characters are allowed".to_string());
-        }
-
+    fn as_sql(&self) -> String {
         let statements = self
             .actions
             .iter()
             .map(|action| action.as_sql())
-            .collect::<Result<Vec<String>, _>>()?
+            .collect::<Vec<String>>()
             .iter()
             .map(|action_sql| {
                 format!("ALTER TABLE IF EXISTS {} {};", self.table_name.as_str(), &action_sql)
@@ -54,7 +46,7 @@ impl AsSql for AlterTable {
             .collect::<Vec<String>>()
             .join("\n");
 
-        Ok(statements)
+        statements
     }
 }
 
@@ -82,13 +74,13 @@ pub enum AlterColumnAction {
 }
 
 impl AsSql for AlterColumnAction {
-    fn as_sql(&self) -> Result<String, String> {
+    fn as_sql(&self) -> String {
         match self {
-            AlterColumnAction::SetType(t) => Ok(format!("TYPE {}", t.as_str())),
+            AlterColumnAction::SetType(t) => format!("TYPE {}", t.as_str()),
             AlterColumnAction::SetNullability(nullable) => {
                 #[rustfmt::skip]
                 let verb = if *nullable { "DROP" } else { "SET" };
-                Ok(format!("{} NOT NULL", verb))
+                format!("{} NOT NULL", verb)
             },
         }
     }
@@ -101,17 +93,17 @@ pub struct AlterColumn {
 }
 
 impl AsSql for AlterColumn {
-    fn as_sql(&self) -> Result<String, String> {
+    fn as_sql(&self) -> String {
         let actions_sql = self
             .actions
             .iter()
             .map(|action| action.as_sql())
-            .collect::<Result<Vec<String>, _>>()?
+            .collect::<Vec<String>>()
             .iter()
             .map(|action| format!("ALTER COLUMN {} {}", &self.column_name, &action))
             .collect::<Vec<String>>()
             .join(", ");
 
-        Ok(actions_sql)
+        actions_sql
     }
 }

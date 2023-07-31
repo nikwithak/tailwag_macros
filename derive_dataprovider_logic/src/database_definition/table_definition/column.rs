@@ -36,17 +36,17 @@ pub struct TableColumn {
 }
 
 impl AsSql for TableColumn {
-    fn as_sql(&self) -> Result<String, String> {
+    fn as_sql(&self) -> String {
         #[rustfmt::skip]
         let pk_str = if self.is_primary_key { "PRIMARY KEY" } else { "" };
         #[rustfmt::skip]
         let not_null_str = if self.is_nullable { "" } else { "NOT NULL" };
-        Ok(format!(
+        format!(
             " {} {} {} {} ",
             &self.column_name,
             &self.column_type.as_str(),
             pk_str,
             not_null_str
-        ))
+        )
     }
 }

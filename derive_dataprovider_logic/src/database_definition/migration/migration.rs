@@ -17,12 +17,12 @@ pub enum MigrationAction {
 }
 
 impl AsSql for MigrationAction {
-    fn as_sql(&self) -> Result<String, String> {
+    fn as_sql(&self) -> String {
         match self {
             MigrationAction::AlterTable(alter_table) => alter_table.as_sql(),
             MigrationAction::CreateTable(create_table) => create_table.as_sql(),
             MigrationAction::DropTable(table_ident) => {
-                Ok(format!("DROP TABLE IF EXISTS {};", &table_ident))
+                format!("DROP TABLE IF EXISTS {};", &table_ident)
             },
         }
     }
@@ -34,16 +34,16 @@ pub struct Migration {
 }
 
 impl AsSql for Migration {
-    fn as_sql(&self) -> Result<String, String> {
+    fn as_sql(&self) -> String {
         let mut sql_statments = Vec::new();
         for alter_table in &self.actions {
-            let statement = alter_table.as_sql()?;
+            let statement = alter_table.as_sql();
 
             sql_statments.push(statement);
         }
 
         let statement = sql_statments.join("\n");
-        Ok(statement)
+        statement
     }
 }
 
