@@ -19,10 +19,8 @@ impl CreateTable {
 
 impl AsSql for CreateTable {
     fn as_sql(&self) -> String {
-        let mut sql = format!(
-            "CREATE TABLE IF NOT EXISTS {} {{\n",
-            self.table_definition.table_name.as_str()
-        );
+        let mut sql =
+            format!("CREATE TABLE IF NOT EXISTS {} (\n", self.table_definition.table_name.as_str());
         let columns_sql = self
             .table_definition
             .columns
@@ -32,7 +30,7 @@ impl AsSql for CreateTable {
             .join(",\n");
 
         sql.push_str(&columns_sql);
-        sql.push_str("\n};");
+        sql.push_str("\n);");
 
         sql
     }
@@ -106,14 +104,14 @@ mod test {
 
         #[rustfmt::skip]
         let expected_query = vec![
-            "CREATE TABLE IF NOT EXISTS new_table {",
+            "CREATE TABLE IF NOT EXISTS new_table (",
                 " uuid_pk_nonnull UUID PRIMARY KEY NOT NULL ,",
                 " string VARCHAR   ,",
                 " bool_nonnull BOOL  NOT NULL ,",
                 " float_nonnull FLOAT  NOT NULL ,",
                 " int INT   ,",
                 " create_timestamp TIMESTAMP   ",
-            "};"
+            ");"
         ].join("\n");
 
         assert_eq!(queries, expected_query);

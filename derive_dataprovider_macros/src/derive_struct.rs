@@ -3,8 +3,6 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{Data, DeriveInput};
 
-use crate::function::{build_create_table_query, build_get_query, build_insert_query};
-
 pub(crate) fn derive_struct(input: &DeriveInput) -> TokenStream {
     let &DeriveInput {
         ident,
@@ -22,31 +20,13 @@ pub(crate) fn derive_struct(input: &DeriveInput) -> TokenStream {
             let trait_name = format_ident!("{}", "PostgresDataProvider");
             let table = DatabaseTableDefinition::from(input);
 
-            let query_create = build_create_table_query(&table).to_string();
-            let query_list = build_get_query(&table).to_string();
-            let query_insert = build_insert_query(&table).to_string();
-
             // Build the actual implementation
             let parse_args_impl_tokens = quote!(
-                const CREATE_TABLE_QUERY: &str = #query_create;
-                const LIST_ALL_QUERY: &str = #query_list;
-                const INSERT_NEW_QUERY: &str = #query_insert;
                 ////////////////////////////////////////
                 // The actual output is defined here. //
                 ////////////////////////////////////////
                 impl #trait_name for #ident {
-                    fn build_create_table_query() -> String {
-                        // TODO: Store it as a `const` and return &str
-                        format!("{}", #query_create)
-                    }
-                    fn build_list_table_query() -> String {
-                        format!("{}", #query_list)
-                    }
-                    fn build_insert_table_query() -> String {
-                        format!("{}", #query_insert)
-                    }
                     fn make_migrations() -> Result<(), String> {
-
                         Ok(())
                     }
                 }

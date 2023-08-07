@@ -1,7 +1,6 @@
 mod _derive_builder;
 mod derive_logic;
 mod derive_struct;
-mod function;
 
 use derive_logic::derive_impl;
 use quote::quote;
