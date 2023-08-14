@@ -1,7 +1,9 @@
-use derive_dataprovider_logic::database_definition::table_definition::DatabaseTableDefinition;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{Data, DeriveInput};
+use tailwag_orm::database_definition::table_definition::DatabaseTableDefinition;
+
+use crate::database_table_definition;
 
 pub(crate) fn derive_struct(input: &DeriveInput) -> TokenStream {
     let &DeriveInput {
@@ -18,7 +20,7 @@ pub(crate) fn derive_struct(input: &DeriveInput) -> TokenStream {
             let _field_names = fields.named.iter().map(|f| &f.ident);
 
             let trait_name = format_ident!("{}", "PostgresDataProvider");
-            let table = DatabaseTableDefinition::from(input);
+            let table = database_table_definition::build_table_definition(&input);
 
             // Build the actual implementation
             let parse_args_impl_tokens = quote!(

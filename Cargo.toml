@@ -9,7 +9,7 @@ edition = "2021"
 [dependencies]
 chrono = { version = "0.4.26", features = ["serde"] }
 darling = "0.20.1"
-derive_dataprovider_logic = { version = "0.1.0", path = "derive_dataprovider_logic" }
+# derive_dataprovider_logic = { version = "0.1.0", path = "derive_dataprovider_logic" }
 derive_dataprovider_macros = { version = "0.1.0", path = "derive_dataprovider_macros" }
 proc-macro2 = "1.0.63"
 quote = "1.0.29"

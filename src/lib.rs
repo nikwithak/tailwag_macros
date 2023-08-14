@@ -25,7 +25,7 @@ pub trait PostgresDataProvider {
     // fn query_builder() -> QueryBuilder;
 }
 
-#[derive(PostgresDataProvider)]
+// #[derive(PostgresDataProvider)]
 struct Foo {
     //     // #[opts(long = "--long")]
     my_string: String,
