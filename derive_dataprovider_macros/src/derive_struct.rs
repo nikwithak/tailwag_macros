@@ -3,7 +3,9 @@ use quote::{format_ident, quote};
 use syn::{Data, DeriveInput};
 use tailwag_orm::database_definition::table_definition::DatabaseTableDefinition;
 
-use crate::database_table_definition;
+use crate::database_table_definition::{self, build_table_definition};
+
+const TRAIT_NAME: &'static str = "PostgresDataProvider";
 
 pub(crate) fn derive_struct(input: &DeriveInput) -> TokenStream {
     let &DeriveInput {
@@ -18,19 +20,29 @@ pub(crate) fn derive_struct(input: &DeriveInput) -> TokenStream {
     match &data.fields {
         syn::Fields::Named(fields) => {
             let _field_names = fields.named.iter().map(|f| &f.ident);
+            /////////////////////////////////////////
+            // GENERIC stuff. Part of the template //
+            /////////////////////////////////////////
+            let trait_name = format_ident!("{}", TRAIT_NAME);
 
-            let trait_name = format_ident!("{}", "PostgresDataProvider");
+            //////////////////////////////////////////////////////////////////////////////////////////
+            //   SPECIFIC stuff - this is where you derive useful objects for your implementation   //
+            //////////////////////////////////////////////////////////////////////////////////////////
             let table = database_table_definition::build_table_definition(&input);
 
-            // Build the actual implementation
+            /////////////////////////////////////////
+            //         Functions Exported          //
+            /////////////////////////////////////////
+            let functions: Vec<TokenStream> = database_table_definition::functions(&input);
+
+            ////////////////////////////////////////
+            // The actual output is defined here. //
+            ////////////////////////////////////////
+
+            // TODO: Figure out Generics, when they end up being needed.
             let parse_args_impl_tokens = quote!(
-                ////////////////////////////////////////
-                // The actual output is defined here. //
-                ////////////////////////////////////////
                 impl #trait_name for #ident {
-                    fn make_migrations() -> Result<(), String> {
-                        Ok(())
-                    }
+                    #(#functions)*
                 }
             );
 

@@ -1,3 +1,4 @@
+use proc_macro2::TokenStream;
 /// TODO: Move the contents of this file outside, into a macro logic crate.
 ///
 /// That was the original point of this crate, but it has evolved into being used as ORM.
@@ -6,6 +7,11 @@ use syn::{Data, DeriveInput, Field, GenericArgument, PathArguments, TypePath};
 use tailwag_orm::database_definition::table_definition::{
     DatabaseColumnType, DatabaseTableDefinition, Identifier, TableColumn,
 };
+
+/// Builds each function implementation for a given struct. You should have a separate function for each function required as part of the #[derive(_)] impl.
+pub fn functions(input: &DeriveInput) -> Vec<TokenStream> {
+    vec![todo!()]
+}
 
 pub fn build_table_definition(input: &DeriveInput) -> DatabaseTableDefinition {
     let &DeriveInput {
@@ -25,7 +31,7 @@ pub fn build_table_definition(input: &DeriveInput) -> DatabaseTableDefinition {
             parent_table_name: table_name.clone(),
             column_name: Identifier::new(format!(
                 "{}",
-                f.ident.as_ref().expect("Found unnamed field in struct")
+                f.ident.as_ref().expect("Found unnamed field in struct"),
             ))
             .expect("Invalid column name: {}"),
             column_type: get_type_from_field(&f),
