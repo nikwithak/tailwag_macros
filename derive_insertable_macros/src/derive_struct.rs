@@ -1,11 +1,38 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{Data, DeriveInput};
-use tailwag_orm::database_definition::table_definition::DatabaseTableDefinition;
 
-use crate::database_table_definition::{self, build_table_definition};
+const TRAIT_NAME: &'static str = "Insertable";
 
-const TRAIT_NAME: &'static str = "PostgresDataProvider";
+fn build_get_insert_statement() -> TokenStream {
+    quote!(
+        fn get_insert_statement(&self) -> tailwag_orm::object_management::insert::InsertStatement {
+            let item = self;
+            let mut insert_map = HashMap::new();
+            insert_map.insert(
+                Identifier::new("id").expect("Invalid Identifier - should not happen"),
+                format!("'{}'", &item.id),
+            );
+            insert_map.insert(
+                Identifier::new("name").expect("Invalid Identifier - should not happen"),
+                format!("'{}'", &item.name),
+            );
+            if let Some(style) = &item.style {
+                insert_map.insert(
+                    Identifier::new("style").expect("Invalid Identifier - should not happen"),
+                    format!("'{}'", style),
+                );
+            }
+            insert_map.insert(
+                Identifier::new("is_open_late").expect("Invalid identifier - should not happen"),
+                item.is_open_late.to_string(),
+            );
+
+            let insert = InsertStatement::new(Self::get_table_definition().clone(), insert_map);
+            insert
+        }
+    )
+}
 
 pub(crate) fn derive_struct(input: &DeriveInput) -> TokenStream {
     let &DeriveInput {
@@ -28,12 +55,12 @@ pub(crate) fn derive_struct(input: &DeriveInput) -> TokenStream {
             //////////////////////////////////////////////////////////////////////////////////////////
             //   SPECIFIC stuff - this is where you derive useful objects for your implementation   //
             //////////////////////////////////////////////////////////////////////////////////////////
-            let table = database_table_definition::build_table_definition(&input);
+            let table = build_table_definition(&input);
 
             /////////////////////////////////////////
             //         Functions Exported          //
             /////////////////////////////////////////
-            let functions: Vec<TokenStream> = database_table_definition::functions(&input);
+            let functions: Vec<TokenStream> = vec![build_get_insert_statement()];
 
             ////////////////////////////////////////
             // The actual output is defined here. //

@@ -10,10 +10,10 @@ use tailwag_orm::database_definition::table_definition::{
 
 /// Builds each function implementation for a given struct. You should have a separate function for each function required as part of the #[derive(_)] impl.
 pub fn functions(input: &DeriveInput) -> Vec<TokenStream> {
-    vec![todo!()]
+    vec![]
 }
 
-pub fn build_table_definition(input: &DeriveInput) -> DatabaseTableDefinition {
+fn build_fn_get_table_definition(input: &DeriveInput) -> TokenStream {
     let &DeriveInput {
         ident,
         data,
@@ -26,40 +26,55 @@ pub fn build_table_definition(input: &DeriveInput) -> DatabaseTableDefinition {
     let syn::Fields::Named(fields) = &data.fields else { panic!("Unnamed fields found in the struct.")};
 
     let columns = fields.named.iter().map(|f| {
-        println!("FIELDNAME{}", f.ident.as_ref().expect("Found unnamed field in struct"));
-        TableColumn {
-            parent_table_name: table_name.clone(),
-            column_name: Identifier::new(format!(
-                "{}",
-                f.ident.as_ref().expect("Found unnamed field in struct"),
-            ))
-            .expect("Invalid column name: {}"),
-            column_type: get_type_from_field(&f),
-            is_primary_key: true,
-            is_nullable: true,
+        let field_name = f.ident.as_ref().expect("Found unnamed field in struct");
+
+        let mut column =
+            TableColumn::new(&field_name.to_string(), get_type_from_field(&f), Vec::new())
+                .expect("Invalid table_name");
+        // TODO: Wrap in logic for "if is pk" - for now go off of "if field is named `id`, later on using annotations"
+        if &field_name.to_string() == "id" {
+            column = column.pk();
         }
+        if !is_option(&f) {
+            column = column.non_null();
+        }
+        column
     });
 
-    DatabaseTableDefinition {
-        table_name: table_name.clone(),
-        columns: columns.collect(),
+    let tokens = quote!(fn);
+
+    let mut table = DatabaseTableDefinition::new(&table_name).expect("Table name is invalid");
+    for column in columns {
+        table.add_column(column);
+    }
+    table.into()
+}
+
+fn get_qualified_path(typepath: &TypePath) -> String {
+    let qualified_path = typepath.path.segments.iter().fold(String::new(), |mut acc, p| {
+        acc.push_str(&p.ident.to_string());
+        acc.push_str("::");
+        acc
+    });
+    qualified_path.trim_end_matches("::").to_string()
+}
+
+fn is_option(field: &Field) -> bool {
+    if let syn::Type::Path(typepath) = &field.ty {
+        match get_qualified_path(typepath).as_str() {
+            "std::option::Option" | "core::option::Option" | "option::Option" | "Option" => true,
+            _ => false,
+        }
+    } else {
+        false
     }
 }
 
 fn get_type_from_field(field: &Field) -> DatabaseColumnType {
     match &field.ty {
         syn::Type::Path(typepath) => {
-            fn get_qualified_path(typepath: &TypePath) -> String {
-                let qualified_path =
-                    typepath.path.segments.iter().fold(String::new(), |mut acc, p| {
-                        acc.push_str(&p.ident.to_string());
-                        acc.push_str("::");
-                        acc
-                    });
-                qualified_path.trim_end_matches("::").to_string()
-            }
-
             // Match the type - if it's a supported type, we map it to the DatabaseColumnType. If it's not, we either fail (MVP), or we add support for joins via another trait (must impl DatabaseColumnSubType or something).
+            // TODO: DRY this out using the `is_option` fn above
             let mut qualified_path = get_qualified_path(typepath);
             qualified_path = match qualified_path.as_str() {
                 "std::option::Option" | "core::option::Option" | "option::Option" | "Option" => {
