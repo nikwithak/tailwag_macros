@@ -1,2 +1,2 @@
-pub use derive_insertable_macros::Insertable;
-pub use derive_queryable_macros::Queryable;
+pub use tailwag_macro_derive_insertable::Insertable;
+pub use tailwag_macro_derive_queryable::Queryable;
