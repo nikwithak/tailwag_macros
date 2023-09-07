@@ -34,7 +34,7 @@ fn build_get_table_definition(input: &DeriveInput) -> TokenStream {
         });
 
         quote!(
-            TableColumn::new(&#column_name, #column_type, Vec::new()).expect("Invalid column name")
+            tailwag::orm::database_definition::table_definition::TableColumn::new(&#column_name, #column_type, Vec::new()).expect("Invalid column name")
             #(#constraints)*
         )
     });
@@ -47,7 +47,7 @@ fn build_get_table_definition(input: &DeriveInput) -> TokenStream {
             let table_def =
                 tailwag::orm::database_definition::table_definition::DatabaseTableDefinition::new(&#table_name)
                 .expect("Table name is invalid")
-                // #(.column(#table_columns))*
+                #(.column(#table_columns))*
             //     // #(.constraint(#table_constraints)*) // TODO - weak constriants support currently
                 ;
 
