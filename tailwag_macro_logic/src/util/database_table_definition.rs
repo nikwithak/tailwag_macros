@@ -5,7 +5,7 @@ use proc_macro2::TokenStream;
 use syn::{Data, DeriveInput, Field, GenericArgument, PathArguments, TypePath};
 
 use tailwag_orm::database_definition::table_definition::{
-    DatabaseColumnType, DatabaseTableDefinition, Identifier, TableColumn,
+    DatabaseColumnType, DatabaseTableDefinition, TableColumn,
 };
 
 /// Builds each function implementation for a given struct. You should have a separate function for each function required as part of the #[derive(_)] impl.
@@ -19,7 +19,8 @@ pub(crate) fn build_table_definition(input: &DeriveInput) -> DatabaseTableDefini
         data,
         ..
     } = &input;
-    let table_name = Identifier::new(ident.to_string()).expect("Invalid identifier");
+    // TODO: Force this to snake_case from CapsCase
+    let table_name = tailwag_utils::strings::to_camel_case(&ident.to_string());
 
     // Panic with error message if we get a non-struct
     let Data::Struct(data) = data else { panic!("Only Structs are supported.") };
@@ -31,17 +32,18 @@ pub(crate) fn build_table_definition(input: &DeriveInput) -> DatabaseTableDefini
         let mut column =
             TableColumn::new(&field_name.to_string(), get_type_from_field(&f), Vec::new())
                 .expect("Invalid table_name");
-        // TODO: Wrap in logic for "if is pk" - for now go off of "if field is named `id`, later on using annotations"
+
+        // TODO: Wrap in logic for "if is pk" - for now go off of "if field is named `id`, later on using macro options
         if &field_name.to_string() == "id" {
             column = column.pk();
         }
+
         if !is_option(&f) {
             column = column.non_null();
         }
+        // TODO: If _??!!??!???? then handle foreign keys
         column
     });
-
-    // let tokens = quote::quote!(fn);
 
     let mut table = DatabaseTableDefinition::new(&table_name).expect("Table name is invalid");
     for column in columns {

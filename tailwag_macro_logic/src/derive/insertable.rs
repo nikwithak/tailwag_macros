@@ -24,7 +24,7 @@ fn build_get_insert_statement(input: &DeriveInput) -> TokenStream {
             quote!(
                 if let Some(#column_name) = &self.#column_name {
                     insert_map.insert(
-                        Identifier::new(#column_name_as_string).expect("Invalid column identifier found - this should not happen. Panicking."),
+                        tailwag::orm::database_definition::table_definition::Identifier::new(#column_name_as_string).expect("Invalid column identifier found - this should not happen. Panicking."),
                         format!(#format_string, &#column_name.to_string()),
                     );
                 }
@@ -32,7 +32,7 @@ fn build_get_insert_statement(input: &DeriveInput) -> TokenStream {
         } else {
             quote!(
                 insert_map.insert(
-                    Identifier::new(#column_name_as_string.to_string()).expect("Invalid column identifier found - this should not happen. Panicking."),
+                    tailwag::orm::database_definition::table_definition::Identifier::new(#column_name_as_string.to_string()).expect("Invalid column identifier found - this should not happen. Panicking."),
                     // TODO: Can't support differently named column/struct_attr names right now
                     // TODO: Only supports string-like types, apparetly?
                     format!(#format_string, &self.#column_name.to_string()),
@@ -44,11 +44,14 @@ fn build_get_insert_statement(input: &DeriveInput) -> TokenStream {
 
     let tokens = quote!(
         fn get_insert_statement(&self) -> tailwag::orm::object_management::insert::InsertStatement {
-            let mut insert_map = HashMap::new();
+            let mut insert_map = std::collections::HashMap::new();
 
             #(#insert_maps)*
 
-            let insert = InsertStatement::new(Self::get_table_definition().clone(), insert_map);
+            let insert = tailwag::orm::object_management::insert::InsertStatement::new(
+                <Self as tailwag::orm::data_manager::GetTableDefinition>::get_table_definition().clone(),
+                insert_map,
+            );
             insert
         }
     );
@@ -93,9 +96,9 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
 
             // TODO: Figure out Generics, when they end up being needed.
             let parse_args_impl_tokens = quote!(
-                impl #trait_name for #ident
+                impl tailwag::orm::queries::Insertable for #ident
                 where
-                    Self: GetTableDefinition, // To make sure error messages show if we can't use `get_table_definition()`
+                    Self: tailwag::orm::data_manager::GetTableDefinition, // To make sure error messages show if we can't use `get_table_definition()`
                 {
                     #(#functions)*
                 }

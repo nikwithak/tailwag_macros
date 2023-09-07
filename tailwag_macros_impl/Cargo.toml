@@ -2,13 +2,13 @@
 proc-macro = true
 
 [package]
-name = "tailwag_macro_derive_insertable"
+name = "tailwag_macros_impl"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-quote = "1.0.33"
-syn = "2.0.31"
 tailwag_macro_logic = { version = "0.1.0", path = "../tailwag_macro_logic" }
+
+syn = "2.0.31"

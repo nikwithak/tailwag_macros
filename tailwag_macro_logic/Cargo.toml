@@ -19,3 +19,4 @@ proc-macro2 = "1.0.63"
 quote = "1.0.29"
 syn = { version = "2.0.23", features = ["full", "parsing"] }
 tailwag_orm = { version = "0.1.0", path = "../../tailwag_orm" }
+tailwag_utils = { version = "0.1.0", path = "../../tailwag_utils" }

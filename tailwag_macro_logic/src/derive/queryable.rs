@@ -38,7 +38,7 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
 
             // TODO: Figure out Generics, when they end up being needed.
             let parse_args_impl_tokens = quote!(
-                impl #trait_name for #ident {
+                impl tailwag::orm::queries::#trait_name for #ident {
                     #(#functions)*
                 }
             );
