@@ -41,13 +41,14 @@ fn build_fn_get_table_definition(input: &DeriveInput) -> TokenStream {
         column
     });
 
-    let tokens = quote!(fn);
+    let tokens = quote::quote!(fn);
 
     let mut table = DatabaseTableDefinition::new(&table_name).expect("Table name is invalid");
     for column in columns {
         table.add_column(column);
     }
-    table.into()
+    // table.into();
+    todo!()
 }
 
 fn get_qualified_path(typepath: &TypePath) -> String {

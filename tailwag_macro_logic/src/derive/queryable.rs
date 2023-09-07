@@ -4,7 +4,7 @@ use syn::{Data, DeriveInput};
 
 const TRAIT_NAME: &'static str = "Queryable";
 
-pub(crate) fn derive_struct(input: &DeriveInput) -> TokenStream {
+pub fn derive_struct(input: &DeriveInput) -> TokenStream {
     let &DeriveInput {
         ident,
         data,

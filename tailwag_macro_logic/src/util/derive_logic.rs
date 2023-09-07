@@ -2,8 +2,6 @@ use darling::FromDeriveInput;
 use proc_macro2::TokenStream;
 use syn::{Data, DeriveInput};
 
-use crate::derive_struct::derive_struct;
-
 #[derive(FromDeriveInput)]
 #[darling(default, attributes(cli_args))]
 struct Opts {

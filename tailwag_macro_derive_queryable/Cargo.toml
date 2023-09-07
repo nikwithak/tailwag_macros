@@ -1,3 +1,6 @@
+[lib]
+proc-macro = true
+
 [package]
 name = "tailwag_macro_derive_queryable"
 version = "0.1.0"
@@ -7,3 +10,5 @@ edition = "2021"
 
 [dependencies]
 tailwag_macro_logic = { version = "0.1.0", path = "../tailwag_macro_logic" }
+
+syn = "2.0.31"

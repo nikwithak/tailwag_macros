@@ -34,7 +34,7 @@ fn build_get_insert_statement() -> TokenStream {
     )
 }
 
-pub(crate) fn derive_struct(input: &DeriveInput) -> TokenStream {
+pub fn derive_struct(input: &DeriveInput) -> TokenStream {
     let &DeriveInput {
         ident,
         data,
@@ -55,7 +55,7 @@ pub(crate) fn derive_struct(input: &DeriveInput) -> TokenStream {
             //////////////////////////////////////////////////////////////////////////////////////////
             //   SPECIFIC stuff - this is where you derive useful objects for your implementation   //
             //////////////////////////////////////////////////////////////////////////////////////////
-            let table = build_table_definition(&input);
+            // let table = build_table_definition(&input);
 
             /////////////////////////////////////////
             //         Functions Exported          //

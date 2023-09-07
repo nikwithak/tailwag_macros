@@ -1,17 +1,12 @@
-pub fn add(
-    left: usize,
-    right: usize,
-) -> usize {
-    left + right
-}
+use syn::parse_macro_input;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+/// Wraps a function with inputs/outputs for a `syn` / `quote`
+#[proc_macro_derive(Insertable, attributes(opts))]
+pub fn derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input);
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+    // Store the logic separately from defining the macro - this gives an easy way to include things like in-library macros (mostly, via imported function), and
+    let impl_trait_tokens = tailwag_macro_logic::derive::insertable::derive_struct(&input);
+
+    impl_trait_tokens.into()
 }
