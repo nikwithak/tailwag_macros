@@ -13,7 +13,7 @@ pub fn functions(input: &DeriveInput) -> Vec<TokenStream> {
     vec![]
 }
 
-fn build_fn_get_table_definition(input: &DeriveInput) -> TokenStream {
+pub(crate) fn build_table_definition(input: &DeriveInput) -> DatabaseTableDefinition {
     let &DeriveInput {
         ident,
         data,
@@ -41,14 +41,14 @@ fn build_fn_get_table_definition(input: &DeriveInput) -> TokenStream {
         column
     });
 
-    let tokens = quote::quote!(fn);
+    // let tokens = quote::quote!(fn);
 
     let mut table = DatabaseTableDefinition::new(&table_name).expect("Table name is invalid");
     for column in columns {
         table.add_column(column);
     }
-    // table.into();
-    todo!()
+
+    table.into()
 }
 
 fn get_qualified_path(typepath: &TypePath) -> String {

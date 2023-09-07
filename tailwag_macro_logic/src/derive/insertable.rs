@@ -4,34 +4,56 @@ use syn::{Data, DeriveInput};
 
 const TRAIT_NAME: &'static str = "Insertable";
 
-fn build_get_insert_statement() -> TokenStream {
-    quote!(
-        fn get_insert_statement(&self) -> tailwag_orm::object_management::insert::InsertStatement {
-            let item = self;
-            let mut insert_map = HashMap::new();
-            insert_map.insert(
-                Identifier::new("id").expect("Invalid Identifier - should not happen"),
-                format!("'{}'", &item.id),
-            );
-            insert_map.insert(
-                Identifier::new("name").expect("Invalid Identifier - should not happen"),
-                format!("'{}'", &item.name),
-            );
-            if let Some(style) = &item.style {
+fn build_get_insert_statement(input: &DeriveInput) -> TokenStream {
+    let input_table_definition =
+        crate::util::database_table_definition::build_table_definition(input);
+
+    let insert_maps = input_table_definition.columns.iter().map(|column| {
+        let column_name = format_ident!("{}", column.column_name.as_str());
+        let column_name_as_string = column.column_name.as_str();
+
+        type E = tailwag_orm::database_definition::table_definition::DatabaseColumnType;
+        let format_string = match &column.column_type {
+            E::Boolean | E::Int | E::Float => quote!("{}"), // No surrounding quotes - I need to refactor how this works *ANYWAY* (i.e. prep statements)
+            E::String | E::Timestamp | E::Uuid => quote!(
+                "'{}'"
+            ),
+        };
+
+        let insert_statement = if column.is_nullable() {
+            quote!(
+                if let Some(#column_name) = &self.#column_name {
+                    insert_map.insert(
+                        Identifier::new(#column_name_as_string).expect("Invalid column identifier found - this should not happen. Panicking."),
+                        format!(#format_string, &#column_name.to_string()),
+                    );
+                }
+            )
+        } else {
+            quote!(
                 insert_map.insert(
-                    Identifier::new("style").expect("Invalid Identifier - should not happen"),
-                    format!("'{}'", style),
+                    Identifier::new(#column_name_as_string.to_string()).expect("Invalid column identifier found - this should not happen. Panicking."),
+                    // TODO: Can't support differently named column/struct_attr names right now
+                    // TODO: Only supports string-like types, apparetly?
+                    format!(#format_string, &self.#column_name.to_string()),
                 );
-            }
-            insert_map.insert(
-                Identifier::new("is_open_late").expect("Invalid identifier - should not happen"),
-                item.is_open_late.to_string(),
-            );
+            )
+        };
+        insert_statement
+    });
+
+    let tokens = quote!(
+        fn get_insert_statement(&self) -> tailwag::orm::object_management::insert::InsertStatement {
+            let mut insert_map = HashMap::new();
+
+            #(#insert_maps)*
 
             let insert = InsertStatement::new(Self::get_table_definition().clone(), insert_map);
             insert
         }
-    )
+    );
+
+    tokens
 }
 
 pub fn derive_struct(input: &DeriveInput) -> TokenStream {
@@ -62,7 +84,7 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
             /////////////////////////////////////////
             let functions: Vec<TokenStream> = vec![
                 // todo!("Add functions here")
-                build_get_insert_statement(),
+                build_get_insert_statement(input),
             ];
 
             ////////////////////////////////////////
@@ -71,7 +93,10 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
 
             // TODO: Figure out Generics, when they end up being needed.
             let parse_args_impl_tokens = quote!(
-                impl #trait_name for #ident {
+                impl #trait_name for #ident
+                where
+                    Self: GetTableDefinition, // To make sure error messages show if we can't use `get_table_definition()`
+                {
                     #(#functions)*
                 }
             );
