@@ -2,8 +2,6 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{Data, DeriveInput};
 
-const TRAIT_NAME: &'static str = "GetTableDefinition";
-
 fn build_get_table_definition(input: &DeriveInput) -> TokenStream {
     // We build the table definition, and use that to (re-)build the creation logic.
     // Other derives use this same function, so it creates a single place to make changes
@@ -72,31 +70,15 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
     match &data.fields {
         syn::Fields::Named(fields) => {
             let _field_names = fields.named.iter().map(|f| &f.ident);
-            /////////////////////////////////////////
-            // GENERIC stuff. Part of the template //
-            /////////////////////////////////////////
-            let trait_name = format_ident!("{}", TRAIT_NAME);
 
-            //////////////////////////////////////////////////////////////////////////////////////////
-            //   SPECIFIC stuff - this is where you derive useful objects for your implementation   //
-            //////////////////////////////////////////////////////////////////////////////////////////
-            // let table = build_table_definition(&input);
-
-            /////////////////////////////////////////
-            //         Functions Exported          //
-            /////////////////////////////////////////
             let functions: Vec<TokenStream> = vec![
                 // todo!("Add functions here")
                 build_get_table_definition(input),
             ];
 
-            ////////////////////////////////////////
-            // The actual output is defined here. //
-            ////////////////////////////////////////
-
             // TODO: Think about how to handle Generics, when they end up being needed.
             let parse_args_impl_tokens = quote!(
-                impl tailwag::orm::data_manager::GetTableDefinition for #ident {
+                impl tailwag::web_service::traits::BuildRoutes for #ident {
                     #(#functions)*
                 }
             );

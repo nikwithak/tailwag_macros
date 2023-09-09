@@ -20,7 +20,7 @@ pub(crate) fn build_table_definition(input: &DeriveInput) -> DatabaseTableDefini
         ..
     } = &input;
     // TODO: Force this to snake_case from CapsCase
-    let table_name = tailwag_utils::strings::to_camel_case(&ident.to_string());
+    let table_name = tailwag_utils::strings::to_snake_case(&ident.to_string());
 
     // Panic with error message if we get a non-struct
     let Data::Struct(data) = data else { panic!("Only Structs are supported.") };
