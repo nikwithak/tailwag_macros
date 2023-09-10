@@ -2,7 +2,7 @@ use syn::parse_macro_input;
 
 // macro_rules! derive_trait {
 //     ($TraitName:ident, $function:item) => {
-//         #[proc_macro_derive($TraitName, attributes(opts))]
+//         #[proc_macro_derive($TraitName)]
 //         pub fn derive_$TraitName(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 //             let input = parse_macro_input!(input);
 //             let impl_trait_tokens = tailwag_macro_logic::derive::deref::$function(&input);
@@ -14,7 +14,7 @@ use syn::parse_macro_input;
 // derive_trait!(Deref, derive_deref);
 
 /// Wraps a function with inputs/outputs for a `syn` / `quote`
-#[proc_macro_derive(Deref, attributes(opts))]
+#[proc_macro_derive(Deref, attributes(deref))]
 pub fn derive_deref(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input);
     let impl_trait_tokens = tailwag_macro_logic::derive::deref::derive_deref(&input);
@@ -23,7 +23,7 @@ pub fn derive_deref(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
 /// Wraps a function with inputs/outputs for a `syn` / `quote`
 #[cfg(feature = "orm")] // TODO: I should really just yank it to separate crates
-#[proc_macro_derive(Queryable, attributes(opts))]
+#[proc_macro_derive(Queryable)]
 pub fn derive_queryable(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input);
     let impl_trait_tokens = tailwag_macro_logic::derive::queryable::derive_struct(&input);
@@ -31,7 +31,7 @@ pub fn derive_queryable(input: proc_macro::TokenStream) -> proc_macro::TokenStre
 }
 
 #[cfg(feature = "orm")] // TODO: I should really just yank it to separate crates
-#[proc_macro_derive(GetTableDefinition, attributes(opts))]
+#[proc_macro_derive(GetTableDefinition)]
 pub fn derive_get_table_definition(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input);
     let impl_trait_tokens =
@@ -40,7 +40,7 @@ pub fn derive_get_table_definition(input: proc_macro::TokenStream) -> proc_macro
 }
 
 #[cfg(feature = "orm")] // TODO: I should really just yank it to separate crates
-#[proc_macro_derive(Insertable, attributes(opts))]
+#[proc_macro_derive(Insertable)]
 pub fn derive_insertable(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input);
     let impl_trait_tokens = tailwag_macro_logic::derive::insertable::derive_struct(&input);
