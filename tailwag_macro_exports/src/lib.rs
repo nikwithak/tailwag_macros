@@ -1,0 +1,48 @@
+use syn::parse_macro_input;
+
+// macro_rules! derive_trait {
+//     ($TraitName:ident, $function:item) => {
+//         #[proc_macro_derive($TraitName, attributes(opts))]
+//         pub fn derive_$TraitName(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+//             let input = parse_macro_input!(input);
+//             let impl_trait_tokens = tailwag_macro_logic::derive::deref::$function(&input);
+//             impl_trait_tokens.into()
+//         }
+//     };
+// }
+// TODO: Not working yet
+// derive_trait!(Deref, derive_deref);
+
+/// Wraps a function with inputs/outputs for a `syn` / `quote`
+#[proc_macro_derive(Deref, attributes(opts))]
+pub fn derive_deref(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input);
+    let impl_trait_tokens = tailwag_macro_logic::derive::deref::derive_deref(&input);
+    impl_trait_tokens.into()
+}
+
+/// Wraps a function with inputs/outputs for a `syn` / `quote`
+#[cfg(feature = "orm")] // TODO: I should really just yank it to separate crates
+#[proc_macro_derive(Queryable, attributes(opts))]
+pub fn derive_queryable(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input);
+    let impl_trait_tokens = tailwag_macro_logic::derive::queryable::derive_struct(&input);
+    impl_trait_tokens.into()
+}
+
+#[cfg(feature = "orm")] // TODO: I should really just yank it to separate crates
+#[proc_macro_derive(GetTableDefinition, attributes(opts))]
+pub fn derive_get_table_definition(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input);
+    let impl_trait_tokens =
+        tailwag_macro_logic::derive::get_table_definition::derive_struct(&input);
+    impl_trait_tokens.into()
+}
+
+#[cfg(feature = "orm")] // TODO: I should really just yank it to separate crates
+#[proc_macro_derive(Insertable, attributes(opts))]
+pub fn derive_insertable(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input);
+    let impl_trait_tokens = tailwag_macro_logic::derive::insertable::derive_struct(&input);
+    impl_trait_tokens.into()
+}

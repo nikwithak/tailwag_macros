@@ -6,9 +6,7 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-default = ["timestamp"]
-timestamp = []
-uuid = []
+orm = ["dep:tailwag_orm"]
 
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -18,5 +16,6 @@ darling = "0.20.1"
 proc-macro2 = "1.0.63"
 quote = "1.0.29"
 syn = { version = "2.0.23", features = ["full", "parsing"] }
-tailwag_orm = { version = "0.1.0", path = "../../orm" }
+tailwag_orm = { version = "0.1.0", path = "../../orm", optional = true }
 tailwag_utils = { version = "0.1.0", path = "../../utils" }
+tailwag_macro_inline = { version = "0.1.0", path = "../tailwag_macro_inline" }

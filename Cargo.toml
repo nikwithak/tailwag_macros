@@ -8,10 +8,16 @@ edition = "2021"
 
 [dependencies]
 darling = "0.20.1"
-tailwag_macros_impl = { version = "0.1.0", path = "tailwag_macros_impl" }
+tailwag_macro_exports = { version = "0.1.0", path = "tailwag_macro_exports" }
+tailwag_macro_inline = { version = "0.1.0", path = "tailwag_macro_inline" }
 proc-macro2 = "1.0.63"
 quote = "1.0.29"
 sqlx = { version = "0.7.1", features = ["runtime-tokio", "postgres"] }
 syn = { version = "2.0.23", features = ["full"] }
 uuid = { version = "1.4.0", features = ["serde", "v4"] }
 serde = { version = "1.0.188", features = ["derive"] }
+
+[features]
+default = []
+orm = ["tailwag_macro_exports/orm"]
+no-orm = []

@@ -1,5 +1,10 @@
+#[cfg(feature = "orm")]
 mod orm;
-mod web_service;
-
+#[cfg(feature = "orm")]
 pub use orm::*;
-pub use web_service::*;
+
+mod util_traits;
+
+pub mod web_service;
+
+pub use util_traits::*;

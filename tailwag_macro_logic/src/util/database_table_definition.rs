@@ -8,11 +8,6 @@ use tailwag_orm::database_definition::table_definition::{
     DatabaseColumnType, DatabaseTableDefinition, TableColumn,
 };
 
-/// Builds each function implementation for a given struct. You should have a separate function for each function required as part of the #[derive(_)] impl.
-pub fn functions(input: &DeriveInput) -> Vec<TokenStream> {
-    vec![]
-}
-
 pub(crate) fn build_table_definition(input: &DeriveInput) -> DatabaseTableDefinition {
     let &DeriveInput {
         ident,

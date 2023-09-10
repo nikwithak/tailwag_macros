@@ -6,13 +6,13 @@ macro_rules! quick_derive_struct {
         use quote::{format_ident, quote};
         use syn::{Data, DeriveInput};
 
-        fn build_function_definition(input: &DeriveInput) -> TokenStream {
+        fn build_function(input: &DeriveInput) -> TokenStream {
     let &DeriveInput {
         ident,
         data,
         ..
     } = &input;
-            let table_name = tailwag_utils::strings::to_camel_case(&ident.to_string());
+            let table_name = tailwag_utils::strings::to_snake_case(&ident.to_string());
 
             // Panic with error message if we get a non-struct
             let Data::Struct(data) = data else { panic!("Only Structs are supported.") };
@@ -21,15 +21,7 @@ macro_rules! quick_derive_struct {
 
             // !! START OF QUOTE
             let tokens = quote!(
-                fn get_table_definition() -> tailwag::orm::database_definition::table_definition::DatabaseTableDefinition {
-                    let table_def =
-                        tailwag::orm::database_definition::table_definition::DatabaseTableDefinition::new(&#table_name)
-                        .expect("Table name is invalid")
-                        #(.column(#table_columns))*
-                    //     // #(.constraint(#table_constraints)*) // TODO - weak constriants support currently
-                        ;
-
-                    table_def.into()
+                fn get_table_definition() -> None {
                 }
             );
             // !! END OF QUOTE
@@ -53,7 +45,7 @@ macro_rules! quick_derive_struct {
 
                     let functions: Vec<TokenStream> = vec![
                         // todo!("Add functions here")
-                        build_get_table_definition(input),
+                        build_function(input),
                     ];
 
                     // TODO: Think about how to handle Generics, when they end up being needed.
