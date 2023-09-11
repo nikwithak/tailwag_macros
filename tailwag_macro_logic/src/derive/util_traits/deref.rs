@@ -48,7 +48,6 @@ pub fn derive_deref(input: &DeriveInput) -> TokenStream {
     let ident_string = ident.to_string();
     // If it's a fieldless struct, we simply deref the name of the struct.
     let (target_ident, target_type) = target.unwrap_or((quote!(#ident_string), quote!(str)));
-    println!("{} : {} : NIK LOOK", &target_ident, target_type);
 
     // TODO: Time for generics!
     let tokens = quote!(

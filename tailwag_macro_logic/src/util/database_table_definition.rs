@@ -4,7 +4,7 @@ use proc_macro2::TokenStream;
 /// That was the original point of this crate, but it has evolved into being used as ORM.
 use syn::{Data, DeriveInput, Field, GenericArgument, PathArguments, TypePath};
 
-use tailwag_orm::database_definition::table_definition::{
+use tailwag_orm::data_definition::table::{
     DatabaseColumnType, DatabaseTableDefinition, TableColumn,
 };
 

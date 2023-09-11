@@ -46,3 +46,11 @@ pub fn derive_insertable(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     let impl_trait_tokens = tailwag_macro_logic::derive::insertable::derive_struct(&input);
     impl_trait_tokens.into()
 }
+
+#[cfg(feature = "orm")] // TODO: I should really just yank it to separate crates
+#[proc_macro_derive(BuildCrudRoutes)]
+pub fn derive_build_crud_routes(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input);
+    let impl_trait_tokens = tailwag_macro_logic::derive::build_routes::derive_struct(&input);
+    impl_trait_tokens.into()
+}

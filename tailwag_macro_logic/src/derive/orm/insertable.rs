@@ -12,7 +12,7 @@ fn build_get_insert_statement(input: &DeriveInput) -> TokenStream {
         let column_name = format_ident!("{}", column.column_name.as_str());
         let column_name_as_string = column.column_name.as_str();
 
-        type E = tailwag_orm::database_definition::table_definition::DatabaseColumnType;
+        type E = tailwag_orm::data_definition::table::DatabaseColumnType;
         let format_string = match &column.column_type {
             E::Boolean | E::Int | E::Float => quote!("{}"), // No surrounding quotes - I need to refactor how this works *ANYWAY* (i.e. prep statements)
             E::String | E::Timestamp | E::Uuid => quote!(
@@ -24,7 +24,7 @@ fn build_get_insert_statement(input: &DeriveInput) -> TokenStream {
             quote!(
                 if let Some(#column_name) = &self.#column_name {
                     insert_map.insert(
-                        tailwag::orm::database_definition::table_definition::Identifier::new(#column_name_as_string).expect("Invalid column identifier found - this should not happen. Panicking."),
+                        tailwag::orm::data_definition::table::Identifier::new(#column_name_as_string).expect("Invalid column identifier found - this should not happen. Panicking."),
                         format!(#format_string, &#column_name.to_string()),
                     );
                 }
@@ -32,7 +32,7 @@ fn build_get_insert_statement(input: &DeriveInput) -> TokenStream {
         } else {
             quote!(
                 insert_map.insert(
-                    tailwag::orm::database_definition::table_definition::Identifier::new(#column_name_as_string.to_string()).expect("Invalid column identifier found - this should not happen. Panicking."),
+                    tailwag::orm::data_definition::table::Identifier::new(#column_name_as_string.to_string()).expect("Invalid column identifier found - this should not happen. Panicking."),
                     // TODO: Can't support differently named column/struct_attr names right now
                     // TODO: Only supports string-like types, apparetly?
                     format!(#format_string, &self.#column_name.to_string()),

@@ -2,9 +2,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{Data, DeriveInput};
 
-const TRAIT_NAME: &'static str = "Insertable";
-
-fn build_build_routes(input: &DeriveInput) -> TokenStream {
+fn build_build_crud_routes(input: &DeriveInput) -> TokenStream {
     let input_table_definition =
         crate::util::database_table_definition::build_table_definition(input);
 
@@ -12,7 +10,7 @@ fn build_build_routes(input: &DeriveInput) -> TokenStream {
         let column_name = format_ident!("{}", column.column_name.as_str());
         let column_name_as_string = column.column_name.as_str();
 
-        type E = tailwag_orm::database_definition::table_definition::DatabaseColumnType;
+        type E = tailwag_orm::data_definition::table::DatabaseColumnType;
         let format_string = match &column.column_type {
             E::Boolean | E::Int | E::Float => quote!("{}"), // No surrounding quotes - I need to refactor how this works *ANYWAY* (i.e. prep statements)
             E::String | E::Timestamp | E::Uuid => quote!(
@@ -32,7 +30,9 @@ fn build_build_routes(input: &DeriveInput) -> TokenStream {
         } else {
             quote!(
                 insert_map.insert(
-                    tailwag::orm::database_definition::table_definition::Identifier::new(#column_name_as_string.to_string()).expect("Invalid column identifier found - this should not happen. Panicking."),
+                    tailwag::orm::database_definition::table_definition::
+                        Identifier::new(#column_name_as_string.to_string())
+                        .expect("Invalid column identifier found - this should not happen. Panicking."),
                     // TODO: Can't support differently named column/struct_attr names right now
                     // TODO: Only supports string-like types, apparetly?
                     format!(#format_string, &self.#column_name.to_string()),
@@ -73,7 +73,7 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
             let _field_names = fields.named.iter().map(|f| &f.ident);
             let functions: Vec<TokenStream> = vec![
                 // todo!("Add functions here")
-                build_build_routes(input),
+                build_build_crud_routes(input),
             ];
 
             let parse_args_impl_tokens = quote!(
