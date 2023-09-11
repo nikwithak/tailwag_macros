@@ -1,9 +1,7 @@
-use proc_macro2::{Ident, TokenStream};
-use quote::{format_ident, quote};
+use proc_macro2::TokenStream;
+use quote::quote;
 use syn::{Data, DeriveInput};
 use tailwag_utils::strings::to_screaming_snake_case;
-
-const TRAIT_NAME: &'static str = "GetTableDefinition";
 
 pub fn derive_struct(input: &DeriveInput) -> TokenStream {
     let &DeriveInput {
@@ -26,17 +24,17 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
             let functions: Vec<TokenStream> =
                 vec![build_get_table_definition(input, once_cell_name.clone())];
 
-            let parse_args_impl_tokens = quote!(
-                static #once_cell_name: std::cell::OnceCell<
-                    tailwag::orm::data_manager::DatabaseTableDefinition<#ident>
-                > = OnceCell::new();
+            let tokens = quote!(
+                static #once_cell_name: std::sync::OnceLock<
+                    tailwag::orm::data_definition::table::DatabaseTableDefinition
+                > = std::sync::OnceLock::new();
                 impl tailwag::orm::data_manager::GetTableDefinition for #ident {
                     #(#functions)*
                 }
 
             );
 
-            parse_args_impl_tokens.into()
+            tokens.into()
         },
         syn::Fields::Unnamed(_) => unimplemented!("Unnamed fields not supported yet"),
         syn::Fields::Unit => unimplemented!("Unit fields not supported yet"),
@@ -86,15 +84,15 @@ fn build_get_table_definition(
     // !! START OF QUOTE
     let tokens = quote!(
         fn get_table_definition() -> tailwag::orm::data_definition::table::DatabaseTableDefinition {
-            let table_def: PostgresDataProvider<Self> = #once_cell_name.get_or_init(|| {
+            let table_def:  &tailwag::orm::data_definition::table::DatabaseTableDefinition = #once_cell_name.get_or_init(|| {
                 tailwag::orm::data_definition::table::DatabaseTableDefinition::new(&#table_name)
                     .expect("Table name is invalid")
                     #(.column(#table_columns))*
                     // #(.constraint(#table_constraints)*) // TODO - weak constriants support currently
-                ;
+                    .into()
             });
 
-            table_def.into()
+            table_def.clone()
         }
     );
     // !! END OF QUOTE
