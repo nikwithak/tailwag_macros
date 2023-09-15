@@ -13,6 +13,26 @@ use syn::parse_macro_input;
 // TODO: Not working yet
 // derive_trait!(Deref, derive_deref);
 
+macro_rules! derive_struct {
+    ($struct_name:ident, $lower_name:ident) => {
+        #[proc_macro_derive($struct_name)]
+        pub fn derive_$lower_name(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+            let input = parse_macro_input!(input);
+            let impl_trait_tokens = tailwag_macro_logic::derive::$lower_name::derive_struct(&input);
+            impl_trait_tokens.into()
+        }
+    };
+}
+
+// derive_struct!(BuildRoutes, build_routes);
+
+#[proc_macro_derive(BuildRoutes)]
+pub fn derive_lower_name(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input);
+    let impl_trait_tokens = tailwag_macro_logic::derive::build_routes::derive_struct(&input);
+    impl_trait_tokens.into()
+}
+
 /// Wraps a function with inputs/outputs for a `syn` / `quote`
 #[proc_macro_derive(Deref, attributes(deref))]
 pub fn derive_deref(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
