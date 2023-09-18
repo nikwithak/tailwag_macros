@@ -2,8 +2,6 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{Data, DeriveInput};
 
-const TRAIT_NAME: &'static str = "Insertable";
-
 fn build_get_insert_statement(input: &DeriveInput) -> TokenStream {
     let input_table_definition =
         crate::util::database_table_definition::build_table_definition(input);
@@ -72,29 +70,11 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
     match &data.fields {
         syn::Fields::Named(fields) => {
             let _field_names = fields.named.iter().map(|f| &f.ident);
-            /////////////////////////////////////////
-            // GENERIC stuff. Part of the template //
-            /////////////////////////////////////////
-            let trait_name = format_ident!("{}", TRAIT_NAME);
-
-            //////////////////////////////////////////////////////////////////////////////////////////
-            //   SPECIFIC stuff - this is where you derive useful objects for your implementation   //
-            //////////////////////////////////////////////////////////////////////////////////////////
-            // let table = build_table_definition(&input);
-
-            /////////////////////////////////////////
-            //         Functions Exported          //
-            /////////////////////////////////////////
             let functions: Vec<TokenStream> = vec![
                 // todo!("Add functions here")
                 build_get_insert_statement(input),
             ];
 
-            ////////////////////////////////////////
-            // The actual output is defined here. //
-            ////////////////////////////////////////
-
-            // TODO: Figure out Generics, when they end up being needed.
             let parse_args_impl_tokens = quote!(
                 impl tailwag::orm::queries::Insertable for #ident
                 where

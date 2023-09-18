@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote};
+use quote::quote;
 use syn::{Data, DeriveInput};
 
 pub fn derive_struct(input: &DeriveInput) -> TokenStream {

@@ -13,6 +13,7 @@ use syn::parse_macro_input;
 // TODO: Not working yet
 // derive_trait!(Deref, derive_deref);
 
+#[allow(unused)]
 macro_rules! derive_struct {
     ($struct_name:ident, $lower_name:ident) => {
         #[proc_macro_derive($struct_name)]

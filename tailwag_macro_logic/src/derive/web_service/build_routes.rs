@@ -1,8 +1,6 @@
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote};
-use syn::{Data, DeriveInput, Field, FieldsNamed, Ident};
-
-use crate::util;
+use quote::quote;
+use syn::{Data, DeriveInput, Field, Ident};
 
 pub fn derive_struct(input: &DeriveInput) -> TokenStream {
     let &DeriveInput {

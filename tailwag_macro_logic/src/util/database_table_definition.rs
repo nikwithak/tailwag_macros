@@ -1,7 +1,3 @@
-use proc_macro2::TokenStream;
-/// TODO: Move the contents of this file outside, into a macro logic crate.
-///
-/// That was the original point of this crate, but it has evolved into being used as ORM.
 use syn::{Data, DeriveInput, Field, GenericArgument, PathArguments, TypePath};
 
 use tailwag_orm::data_definition::table::{
