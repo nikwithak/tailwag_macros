@@ -50,7 +50,7 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
                             }
                         }
 
-                        pub fn post_item(
+                        pub async fn post_item(
                             axum::extract::State(data_manager): axum::extract::State<tailwag::orm::data_manager::PostgresDataProvider<#ident>>,
                             axum::extract::Json(request): axum::extract::Json<Request>,
                         ) -> axum::extract::Json<#ident> {
