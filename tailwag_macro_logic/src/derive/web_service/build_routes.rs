@@ -1,6 +1,8 @@
 use proc_macro2::TokenStream;
-use quote::quote;
-use syn::{Data, DeriveInput, Field, Ident};
+use quote::{format_ident, quote};
+use syn::{Data, DeriveInput, Field, FieldsNamed, Ident};
+
+use crate::util::{self, attribute_parsing::GetAttribute};
 
 pub fn derive_struct(input: &DeriveInput) -> TokenStream {
     let &DeriveInput {
@@ -18,8 +20,9 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
                 .iter()
                 .filter(|field| {
                     // TODO: Abstract this for easier filtering
-                    field.ident.as_ref().expect("Unexpected unnamed field found").to_string()
-                        != "id"
+                    field.get_attribute("request_ignore").is_some() // TODO: `request(ignore)`
+                        || field.ident.as_ref().expect("Unexpected unnamed field found").to_string()
+                            != "id" // Always include "id"
                 })
                 .collect();
             let field_names_filtered: Vec<&Ident> = fields_filtered
@@ -42,19 +45,20 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
                                     // TODO: Don't assume ID here
                                     id: uuid::Uuid::new_v4(),
                                     #(#field_names_filtered: self.#field_names_filtered),*
+                                    // ..Default::default() // Todo: Require default? Or how to handle non-magic fields?
                                 }
                             }
                         }
 
-                        pub async fn post_item(
+                        pub fn post_item(
                             axum::extract::State(data_manager): axum::extract::State<tailwag::orm::data_manager::PostgresDataProvider<#ident>>,
-                        // TODO: macro for the function to wrap in `Query` or `Json` automatically, so it can just be a decoration on a logic function.
-                            axum::extract::Json(request): axum::extract::Json<#ident>,
+                            axum::extract::Json(request): axum::extract::Json<Request>,
                         ) -> axum::extract::Json<#ident> {
                             let item: #ident = request.into();
                             data_manager.create(&item).await.expect("Unable to create object");
                             axum::extract::Json(item)
                         }
+
 
                         pub async fn get_items(
                             axum::extract::State(data_manager): axum::extract::State<tailwag::orm::data_manager::PostgresDataProvider<#ident>>
@@ -69,7 +73,7 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
                             .route("/", axum::routing::method_routing::post(post_item))
                             .route("/", axum::routing::method_routing::get(get_items))
                             .with_state(data_manager)
-                        }
+                    }
                 }
             );
 

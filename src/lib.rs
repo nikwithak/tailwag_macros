@@ -13,4 +13,6 @@ pub use tailwag_macro_exports::Queryable;
 
 pub use tailwag_macro_exports::Deref;
 
+// pub use tailwag_macro_exports::BuildCreateRoute;
+// pub use tailwag_macro_exports::BuildListGetRoute;
 pub use tailwag_macro_exports::BuildRoutes;

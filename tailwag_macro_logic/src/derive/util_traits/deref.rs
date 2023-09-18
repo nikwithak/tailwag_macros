@@ -1,6 +1,8 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{AttrStyle, Attribute, Data, DeriveInput, Field};
+use syn::{Data, DeriveInput};
+
+use crate::util::attribute_parsing::GetAttribute;
 
 /// Logic for deriving Deref - only tested with structs using named fields.
 ///
@@ -14,21 +16,11 @@ pub fn derive_deref(input: &DeriveInput) -> TokenStream {
     let Data::Struct(data) = data else {
     panic!("Only Structs are supported")
   };
-    fn get_attribute_named<'a>(
-        field: &'a Field,
-        attr_name: &str,
-    ) -> Option<&'a Attribute> {
-        field
-            .attrs
-            .iter()
-            .filter(|a| a.style == AttrStyle::Outer)
-            .find(|a| a.path().is_ident(attr_name))
-    }
 
     let target = data
         .fields
         .iter()
-        .find(|f| get_attribute_named(&f, "deref").is_some())
+        .find(|f| f.get_attribute("deref").is_some())
         .map_or_else(
             || {
                 if data.fields.len() <= 1 {

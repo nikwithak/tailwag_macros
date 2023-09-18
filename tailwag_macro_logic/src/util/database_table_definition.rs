@@ -1,8 +1,14 @@
+use proc_macro2::TokenStream;
+/// TODO: Move the contents of this file outside, into a macro logic crate.
+///
+/// That was the original point of this crate, but it has evolved into being used as ORM.
 use syn::{Data, DeriveInput, Field, GenericArgument, PathArguments, TypePath};
 
 use tailwag_orm::data_definition::table::{
     DatabaseColumnType, DatabaseTableDefinition, TableColumn,
 };
+
+use super::attribute_parsing::GetAttribute;
 
 pub(crate) fn build_table_definition(input: &DeriveInput) -> DatabaseTableDefinition {
     let &DeriveInput {
@@ -23,15 +29,16 @@ pub(crate) fn build_table_definition(input: &DeriveInput) -> DatabaseTableDefini
         let mut column =
             TableColumn::new(&field_name.to_string(), get_type_from_field(&f), Vec::new())
                 .expect("Invalid table_name");
+        // TODO: Handle #[flatten], which will flatten the pieces into a single table. Will that work? Gonna be tough in a derive macro.
 
-        // TODO: Wrap in logic for "if is pk" - for now go off of "if field is named `id`, later on using macro options
-        if &field_name.to_string() == "id" {
+        if &field_name.to_string() == "id" || f.get_attribute("primary_key").is_some() {
             column = column.pk();
         }
 
         if !is_option(&f) {
             column = column.non_null();
         }
+
         // TODO: If _??!!??!???? then handle foreign keys
         column
     });
@@ -63,7 +70,6 @@ fn is_option(field: &Field) -> bool {
         false
     }
 }
-
 fn get_type_from_field(field: &Field) -> DatabaseColumnType {
     match &field.ty {
         syn::Type::Path(typepath) => {
