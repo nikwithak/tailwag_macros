@@ -59,7 +59,6 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
                             axum::extract::Json(item)
                         }
 
-
                         pub async fn get_items(
                             axum::extract::State(data_manager): axum::extract::State<tailwag::orm::data_manager::PostgresDataProvider<#ident>>
                         ) -> axum::extract::Json<Vec<#ident>> {

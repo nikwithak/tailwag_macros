@@ -10,12 +10,14 @@ use crate::util::attribute_parsing::GetAttribute;
 pub fn derive_deref(input: &DeriveInput) -> TokenStream {
     let &DeriveInput {
         ident,
+        generics,
         data,
         ..
     } = &input;
     let Data::Struct(data) = data else {
-    panic!("Only Structs are supported")
-  };
+        panic!("Only Structs are supported")
+    };
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
     let target = data
         .fields
@@ -43,7 +45,9 @@ pub fn derive_deref(input: &DeriveInput) -> TokenStream {
 
     // TODO: Time for generics!
     let tokens = quote!(
-        impl std::ops::Deref for #ident {
+        impl #impl_generics std::ops::Deref for #ident #ty_generics
+            #where_clause
+        {
             type Target = #target_type;
             fn deref(&self) -> &Self::Target {
                 #target_ident

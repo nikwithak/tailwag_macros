@@ -70,6 +70,12 @@ fn is_option(field: &Field) -> bool {
         false
     }
 }
+
+enum AttributeType {
+    ColumnType(DatabaseColumnType),
+    OwnedDataType(String), // Direct ClassName
+}
+
 fn get_type_from_field(field: &Field) -> DatabaseColumnType {
     match &field.ty {
         syn::Type::Path(typepath) => {

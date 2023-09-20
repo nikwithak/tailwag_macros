@@ -25,10 +25,22 @@ macro_rules! derive_struct {
     };
 }
 
-// derive_struct!(BuildRoutes, build_routes);
+#[proc_macro_derive(FromStr)]
+pub fn derive_from_str(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input);
+    let impl_trait_tokens = tailwag_macro_logic::derive::from_string::derive_trait(&input);
+    impl_trait_tokens.into()
+}
+
+#[proc_macro_derive(Display)]
+pub fn derive_display(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input);
+    let impl_trait_tokens = tailwag_macro_logic::derive::display::derive_display(&input);
+    impl_trait_tokens.into()
+}
 
 #[proc_macro_derive(BuildRoutes)]
-pub fn derive_lower_name(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn derive_build_routes(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input);
     let impl_trait_tokens = tailwag_macro_logic::derive::build_routes::derive_struct(&input);
     impl_trait_tokens.into()
