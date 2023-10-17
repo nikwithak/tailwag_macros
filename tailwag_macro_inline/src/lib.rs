@@ -9,6 +9,7 @@ macro_rules! derive_magic {
             sqlx::FromRow,
             Clone,
             tailwag::macros::Queryable,
+            tailwag::macros::Updateable,
             tailwag::macros::GetTableDefinition,
             tailwag::macros::Insertable,
         )]

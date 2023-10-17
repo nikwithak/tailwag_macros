@@ -41,7 +41,7 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
                         impl Into<#ident> for Request {
                             fn into(self) -> #ident {
                                 #ident {
-                                    // TODO: Don't assume ID here
+                                    // TODO: Don't (necessarily) assume ID here
                                     id: uuid::Uuid::new_v4(),
                                     #(#field_names_filtered: self.#field_names_filtered),*
                                     // ..Default::default() // Todo: Require default? Or how to handle non-magic fields?

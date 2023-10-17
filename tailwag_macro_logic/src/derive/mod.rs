@@ -5,6 +5,7 @@ pub use orm::*;
 
 mod util_traits;
 
+pub mod forms;
 mod web_service;
 pub use web_service::*;
 

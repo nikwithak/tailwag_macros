@@ -10,6 +10,8 @@ pub use tailwag_macro_exports::GetTableDefinition;
 pub use tailwag_macro_exports::Insertable;
 #[cfg(feature = "orm")]
 pub use tailwag_macro_exports::Queryable;
+#[cfg(feature = "orm")]
+pub use tailwag_macro_exports::Updateable;
 
 pub use tailwag_macro_exports::Deref;
 pub use tailwag_macro_exports::Display;
