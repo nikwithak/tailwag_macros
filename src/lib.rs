@@ -5,6 +5,8 @@ pub use tailwag_macro_inline::*;
 panic!("Cannot have both orm & no_orm features enabled");
 
 #[cfg(feature = "orm")]
+pub use tailwag_macro_exports::Deleteable;
+#[cfg(feature = "orm")]
 pub use tailwag_macro_exports::GetTableDefinition;
 #[cfg(feature = "orm")]
 pub use tailwag_macro_exports::Insertable;

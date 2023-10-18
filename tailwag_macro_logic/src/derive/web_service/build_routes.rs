@@ -55,7 +55,7 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
                             axum::extract::Json(request): axum::extract::Json<Request>,
                         ) -> axum::extract::Json<#ident> {
                             let item: #ident = request.into();
-                            data_manager.create(&item).await.expect("Unable to create object");
+                            let item = tailwag::orm::data_manager::traits::DataProvider::<#ident>::create(&data_manager, item).expect("Unable to create object");
                             axum::extract::Json(item)
                         }
 
@@ -64,13 +64,32 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
                         ) -> axum::extract::Json<Vec<#ident>> {
                             // TODO: Revisit this when authorization rules are in place.
                             // TODO: Add filtering via query params
-                            axum::extract::Json(data_manager.all().execute().await.unwrap())
+                            axum::extract::Json(tailwag::orm::data_manager::traits::DataProvider::<#ident>::all(&data_manager).execute().await.unwrap())
+                        }
+
+                        pub async fn update_item(
+                            axum::extract::State(data_manager): axum::extract::State<tailwag::orm::data_manager::PostgresDataProvider<#ident>>,
+                            axum::extract::Json(request): axum::extract::Json<#ident>,
+                        ) -> axum::extract::Json<#ident> {
+                            let item: #ident = request.into();
+                            tailwag::orm::data_manager::traits::DataProvider::<#ident>::update(&data_manager, &item).expect("Unable to create object");
+                            axum::extract::Json(item)
+                        }
+
+                        pub async fn delete_item(
+                            axum::extract::State(data_manager): axum::extract::State<tailwag::orm::data_manager::PostgresDataProvider<#ident>>,
+                            axum::extract::Json(request): axum::extract::Json<#ident>,
+                        )  {
+                            let item: #ident = request.into();
+                            let item = tailwag::orm::data_manager::traits::DataProvider::<#ident>::delete(&data_manager, item).expect("Unable to create object");
                         }
 
                         data_manager.run_migrations().await.expect("Failed to run migrations");
                         axum::Router::new()
                             .route("/", axum::routing::method_routing::post(post_item))
                             .route("/", axum::routing::method_routing::get(get_items))
+                            .route("/", axum::routing::method_routing::patch(update_item))
+                            .route("/", axum::routing::method_routing::delete(delete_item))
                             .with_state(data_manager)
                     }
                 }

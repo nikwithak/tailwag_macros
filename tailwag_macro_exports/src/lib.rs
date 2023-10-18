@@ -73,6 +73,14 @@ pub fn derive_get_table_definition(input: proc_macro::TokenStream) -> proc_macro
 }
 
 #[cfg(feature = "orm")] // TODO: I should really just yank it to separate crates
+#[proc_macro_derive(Deleteable)]
+pub fn derive_deleteable(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input);
+    let impl_trait_tokens = tailwag_macro_logic::derive::deleteable::derive_struct(&input);
+    impl_trait_tokens.into()
+}
+
+#[cfg(feature = "orm")] // TODO: I should really just yank it to separate crates
 #[proc_macro_derive(Updateable)]
 pub fn derive_updateable(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input);

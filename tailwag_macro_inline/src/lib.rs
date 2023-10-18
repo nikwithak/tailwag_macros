@@ -10,6 +10,7 @@ macro_rules! derive_magic {
             Clone,
             tailwag::macros::Queryable,
             tailwag::macros::Updateable,
+            tailwag::macros::Deleteable,
             tailwag::macros::GetTableDefinition,
             tailwag::macros::Insertable,
         )]
