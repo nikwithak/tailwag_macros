@@ -1,8 +1,8 @@
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote};
-use syn::{Data, DeriveInput, Field, FieldsNamed, Ident};
+use quote::quote;
+use syn::{Data, DeriveInput, Field, Ident};
 
-use crate::util::{self, attribute_parsing::GetAttribute};
+use crate::util::attribute_parsing::GetAttribute;
 
 pub fn derive_struct(input: &DeriveInput) -> TokenStream {
     let &DeriveInput {

@@ -1,4 +1,3 @@
-use proc_macro2::TokenStream;
 /// TODO: Move the contents of this file outside, into a macro logic crate.
 ///
 /// That was the original point of this crate, but it has evolved into being used as ORM.
@@ -69,11 +68,6 @@ fn is_option(field: &Field) -> bool {
     } else {
         false
     }
-}
-
-enum AttributeType {
-    ColumnType(DatabaseColumnType),
-    OwnedDataType(String), // Direct ClassName
 }
 
 fn get_type_from_field(field: &Field) -> DatabaseColumnType {

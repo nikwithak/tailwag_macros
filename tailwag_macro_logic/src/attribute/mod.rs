@@ -1,5 +1,3 @@
-use tailwag_macro_inline::quick_derive_struct;
-
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Data, DeriveInput};
@@ -9,11 +7,11 @@ fn build_function_definition(input: &DeriveInput) -> TokenStream {
         data,
         ..
     } = &input;
-    let table_name = tailwag_utils::strings::to_snake_case(&ident.to_string());
+    let _table_name = tailwag_utils::strings::to_snake_case(&ident.to_string());
     let Data::Struct(data) = data else {
       panic!("Only Structs are supported.")
     };
-    let syn::Fields::Named(fields) =  &data.fields else {
+    let syn::Fields::Named(_fields) = &data.fields else {
       panic!("Unnamed fields found in the struct.")
     };
     let tokens = quote!(

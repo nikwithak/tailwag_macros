@@ -2,8 +2,6 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Data, DeriveInput};
 
-use crate::util::attribute_parsing::GetAttribute;
-
 /// Logic for deriving Deref - only tested with structs using named fields.
 ///
 /// Derefs to the field tagged with the `#[deref]` attribute  - if not found, it defaults to the first declared field in the struct.

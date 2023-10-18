@@ -1,8 +1,6 @@
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote};
-use syn::{Data, DeriveInput, Field, FieldsNamed, Ident};
-
-use crate::util::{self, attribute_parsing::GetAttribute};
+use quote::quote;
+use syn::{Data, DeriveInput};
 
 pub fn derive_struct(input: &DeriveInput) -> TokenStream {
     let &DeriveInput {
@@ -14,7 +12,7 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
     let Data::Struct(data) = data else { panic!("Only Structs are supported") };
 
     match &data.fields {
-        syn::Fields::Named(fields) => {
+        syn::Fields::Named(_fields) => {
             let parse_args_impl_tokens = quote!(
                 impl tailwag::web::traits::rest_api::BuildListGetRoute for #ident
                 {
