@@ -3,6 +3,9 @@ mod orm;
 #[cfg(feature = "orm")]
 pub use orm::*;
 
+// #[cfg(feature = "gui")]
+pub mod gui;
+
 mod util_traits;
 
 pub mod forms;

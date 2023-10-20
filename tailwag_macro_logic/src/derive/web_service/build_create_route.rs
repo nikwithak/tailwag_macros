@@ -53,7 +53,9 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
                             axum::extract::State(data_manager): axum::extract::State<tailwag::orm::data_manager::PostgresDataProvider<#ident>>,
                             axum::extract::Json(request): axum::extract::Json<Request>,
                         ) -> axum::extract::Json<#ident> {
+                            log::debug!("I'm here!");
                             let item: #ident = request.into();
+                            log::debug!("{:?}", request);
                             data_manager.create(&item).await.expect("Unable to create object");
                             axum::extract::Json(item)
                         }

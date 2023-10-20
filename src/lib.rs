@@ -5,15 +5,22 @@ pub use tailwag_macro_inline::*;
 panic!("Cannot have both orm & no_orm features enabled");
 
 #[cfg(feature = "orm")]
-pub use tailwag_macro_exports::Deleteable;
+mod orm {
+    pub use tailwag_macro_exports::Deleteable;
+    pub use tailwag_macro_exports::GetTableDefinition;
+    pub use tailwag_macro_exports::Insertable;
+    pub use tailwag_macro_exports::Queryable;
+    pub use tailwag_macro_exports::Updateable;
+}
 #[cfg(feature = "orm")]
-pub use tailwag_macro_exports::GetTableDefinition;
+pub use orm::*;
+
 #[cfg(feature = "orm")]
-pub use tailwag_macro_exports::Insertable;
+mod gui {
+    pub use tailwag_macro_exports::AsEguiForm;
+}
 #[cfg(feature = "orm")]
-pub use tailwag_macro_exports::Queryable;
-#[cfg(feature = "orm")]
-pub use tailwag_macro_exports::Updateable;
+pub use gui::*;
 
 pub use tailwag_macro_exports::Deref;
 pub use tailwag_macro_exports::Display;

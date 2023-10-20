@@ -32,6 +32,13 @@ pub fn derive_from_str(input: proc_macro::TokenStream) -> proc_macro::TokenStrea
     impl_trait_tokens.into()
 }
 
+#[proc_macro_derive(AsEguiForm)]
+pub fn derive_to_form(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input);
+    let impl_trait_tokens = tailwag_macro_logic::derive::gui::to_form::derive_struct(&input);
+    impl_trait_tokens.into()
+}
+
 #[proc_macro_derive(Display)]
 pub fn derive_display(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input);
