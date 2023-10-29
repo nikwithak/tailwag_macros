@@ -1,7 +1,7 @@
 /// TODO: Move the contents of this file outside, into a macro logic crate.
 ///
 /// That was the original point of this crate, but it has evolved into being used as ORM.
-use syn::{Data, DeriveInput, Field, GenericArgument, PathArguments, TypePath};
+use syn::{Data, DeriveInput, Field, GenericArgument, PathArguments};
 
 use tailwag_orm::data_definition::table::{
     DatabaseColumnType, DatabaseTableDefinition, TableColumn,
@@ -50,27 +50,11 @@ pub(crate) fn build_table_definition(input: &DeriveInput) -> DatabaseTableDefini
     table.into()
 }
 
-fn get_qualified_path(typepath: &TypePath) -> String {
-    let qualified_path = typepath.path.segments.iter().fold(String::new(), |mut acc, p| {
-        acc.push_str(&p.ident.to_string());
-        acc.push_str("::");
-        acc
-    });
-    qualified_path.trim_end_matches("::").to_string()
-}
+// Re-exports for backwards compatility for paths already using these. Will be removed in the future.
+pub use super::type_parsing::get_qualified_path;
+pub use super::type_parsing::is_option;
 
-fn is_option(field: &Field) -> bool {
-    if let syn::Type::Path(typepath) = &field.ty {
-        match get_qualified_path(typepath).as_str() {
-            "std::option::Option" | "core::option::Option" | "option::Option" | "Option" => true,
-            _ => false,
-        }
-    } else {
-        false
-    }
-}
-
-fn get_type_from_field(field: &Field) -> DatabaseColumnType {
+pub fn get_type_from_field(field: &Field) -> DatabaseColumnType {
     match &field.ty {
         syn::Type::Path(typepath) => {
             // Match the type - if it's a supported type, we map it to the DatabaseColumnType. If it's not, we either fail (MVP), or we add support for joins via another trait (must impl DatabaseColumnSubType or something).

@@ -18,8 +18,8 @@ pub use orm::*;
 #[cfg(feature = "orm")]
 mod gui {
     pub use tailwag_macro_exports::AsEguiForm;
+    pub use tailwag_macro_exports::IntoForm;
 }
-#[cfg(feature = "orm")]
 pub use gui::*;
 
 pub use tailwag_macro_exports::Deref;
