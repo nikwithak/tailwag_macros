@@ -1,8 +1,3 @@
-#[cfg(feature = "orm")]
-mod orm;
-#[cfg(feature = "orm")]
-pub use orm::*;
-
 // #[cfg(feature = "gui")]
 pub mod gui;
 

@@ -1,4 +1,5 @@
 pub use tailwag_macro_inline::*;
+pub use tailwag_orm_macros;
 
 #[cfg(feature = "orm")]
 #[cfg(features = "no_orm")]
@@ -6,11 +7,10 @@ panic!("Cannot have both orm & no_orm features enabled");
 
 #[cfg(feature = "orm")]
 mod orm {
-    pub use tailwag_macro_exports::Deleteable;
-    pub use tailwag_macro_exports::GetTableDefinition;
-    pub use tailwag_macro_exports::Insertable;
-    pub use tailwag_macro_exports::Queryable;
-    pub use tailwag_macro_exports::Updateable;
+    pub use tailwag_orm_macros::Deleteable;
+    pub use tailwag_orm_macros::GetTableDefinition;
+    pub use tailwag_orm_macros::Insertable;
+    pub use tailwag_orm_macros::Updateable;
 }
 #[cfg(feature = "orm")]
 pub use orm::*;

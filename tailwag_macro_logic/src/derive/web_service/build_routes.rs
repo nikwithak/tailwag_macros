@@ -69,7 +69,7 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
                             // TODO: Revisit this when authorization rules are in place.
                             // TODO: Add filtering via query params
                             // axum::extract::Json(tailwag::orm::data_manager::traits::DataProvider::<#ident>::all(&data_manager).execute().await.unwrap())
-                            axum::extract::Json(data_manager.all().await.execute().await.unwrap())
+                            axum::extract::Json(data_manager.all().await.unwrap().execute().await.unwrap())
                         }
 
                         pub async fn update_item(

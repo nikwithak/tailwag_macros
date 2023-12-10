@@ -8,11 +8,13 @@ macro_rules! derive_magic {
             serde::Serialize,
             sqlx::FromRow,
             Clone,
-            tailwag::macros::Queryable,
+            tailwag::macros::GetTableDefinition,
             tailwag::macros::Updateable,
             tailwag::macros::Deleteable,
-            tailwag::macros::GetTableDefinition,
             tailwag::macros::Insertable,
+            Debug,
+            tailwag::macros::BuildRoutes, // Creates the functions needed for a REST service (full CRUD)
+            tailwag::macros::AsEguiForm, // Renders the object into an editable form for an egui application.
         )]
         $i
     };

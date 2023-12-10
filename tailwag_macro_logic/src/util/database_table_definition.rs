@@ -85,17 +85,24 @@ pub fn get_type_from_field(field: &Field) -> DatabaseColumnType {
             }
             .unwrap_or(qualified_path);
 
-            let db_type = match qualified_path.as_str() {
-                "std::string::String" | "string::String" | "String" => DatabaseColumnType::String,
-                "bool" => DatabaseColumnType::Boolean,
-                "u32" | "u64" | "i32" | "i64" | "usize" | "isize" => DatabaseColumnType::Int,
-                "f32" | "f64" | "fsize" => DatabaseColumnType::Float,
-                "chrono::_" => DatabaseColumnType::Timestamp, // TODO
-                "uuid::Uuid" | "Uuid" => DatabaseColumnType::Uuid,
-                _ => {
-                    // TODO: Impl for joinable tables
-                    unimplemented!("{} not a supported type.", qualified_path)
-                },
+            let db_type = if let Some(_) = field.get_attribute("string") {
+                DatabaseColumnType::String
+            } else {
+                match qualified_path.as_str() {
+                    "std::string::String" | "string::String" | "String" => {
+                        DatabaseColumnType::String
+                    },
+                    "bool" => DatabaseColumnType::Boolean,
+                    "u32" | "u64" | "i32" | "i64" | "usize" | "isize" => DatabaseColumnType::Int,
+                    "f32" | "f64" | "fsize" => DatabaseColumnType::Float,
+                    "chrono::_" => DatabaseColumnType::Timestamp, // TODO
+                    "uuid::Uuid" | "Uuid" => DatabaseColumnType::Uuid,
+                    _ => {
+                        // TODO: Clean this up / make it more dynamic.
+                        // DatabaseColumnType::Json
+                        DatabaseColumnType::String
+                    },
+                }
             };
             db_type
         },

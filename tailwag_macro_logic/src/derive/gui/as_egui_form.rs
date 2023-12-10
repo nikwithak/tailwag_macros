@@ -114,7 +114,7 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
             let parse_args_impl_tokens = quote!(
 
                 // TODO: Fully qualify this
-                impl AsEguiForm for #ident {
+                impl tailwag::gui::widgets::item_manager::item_edit_page::AsEguiForm for #ident {
                     #(#functions)*
                 }
 
