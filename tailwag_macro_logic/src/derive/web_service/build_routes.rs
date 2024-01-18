@@ -78,7 +78,7 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
                         ) -> axum::extract::Json<#ident> {
                             let item: #ident = request.into();
                             // tailwag::orm::data_manager::traits::DataProvider::<#ident>::update(&data_manager, &item).await.expect("Unable to create object");
-                            data_manager.update( &item).await.expect("Unable to create object");
+                            data_manager.update( &item).await.expect("Unable to update object");
                             axum::extract::Json(item)
                         }
 
@@ -87,7 +87,7 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
                             axum::extract::Json(request): axum::extract::Json<#ident>,
                         )  {
                             let item: #ident = request.into();
-                            let item = data_manager.delete( item).await.expect("Unable to create object");
+                            let item = data_manager.delete( item).await.expect("Unable to delete object");
                         }
 
                         data_manager.run_migrations().await.expect("Failed to run migrations");
