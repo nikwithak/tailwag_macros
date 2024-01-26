@@ -11,7 +11,9 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
         ..
     } = &input;
     // Panic with error message if we get a non-struct
-    let Data::Struct(data) = data else { panic!("Only Structs are supported") };
+    let Data::Struct(data) = data else {
+        panic!("Only Structs are supported")
+    };
 
     match &data.fields {
         syn::Fields::Named(fields) => {
@@ -34,7 +36,9 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
                 #[axum::async_trait]
                 impl tailwag::web::traits::rest_api::BuildRoutes<#ident> for #ident
                 {
-                    async fn build_routes(data_manager: tailwag::orm::data_manager::PostgresDataProvider<#ident>) -> axum::Router {
+                    async fn build_routes(
+                        data_manager: tailwag::orm::data_manager::PostgresDataProvider<#ident>,
+                    ) -> axum::Router {
                         #[derive(serde::Deserialize)]
                         pub struct Request {
                             #(#fields_filtered),*
@@ -64,12 +68,14 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
                         }
 
                         pub async fn get_items(
-                            axum::extract::State(data_manager): axum::extract::State<tailwag::orm::data_manager::PostgresDataProvider<#ident>>
+                            axum::extract::State(data_manager): axum::extract::State<tailwag::orm::data_manager::PostgresDataProvider<#ident>>,
+                            axum::extract::Extension(auth_token): axum::extract::Extension<String> // TODO: Remove This
                         ) -> axum::extract::Json<Vec<#ident>> {
                             // TODO: Revisit this when authorization rules are in place.
                             // TODO: Add filtering via query params
                             // axum::extract::Json(tailwag::orm::data_manager::traits::DataProvider::<#ident>::all(&data_manager).execute().await.unwrap())
-                            axum::extract::Json(data_manager.all().await.unwrap().execute().await.unwrap())
+                            println!("Got value: {}", &auth_token);
+                            axum::extract::Json(data_manager.all().await.unwrap().execute().await.unwrap().into_iter().map(|mut v|{v.description=Some(auth_token.to_string());v}).collect())
                         }
 
                         pub async fn update_item(
