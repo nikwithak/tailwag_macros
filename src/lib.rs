@@ -9,6 +9,7 @@ panic!("Cannot have both orm & no_orm features enabled");
 mod orm {
     pub use tailwag_orm_macros::Deleteable;
     pub use tailwag_orm_macros::GetTableDefinition;
+    pub use tailwag_orm_macros::Id;
     pub use tailwag_orm_macros::Insertable;
     pub use tailwag_orm_macros::Updateable;
 }

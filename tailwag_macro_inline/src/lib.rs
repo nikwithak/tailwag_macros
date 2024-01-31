@@ -4,17 +4,19 @@ pub mod template_macros;
 macro_rules! derive_magic {
     ($i:item) => {
         #[derive(
-            serde::Deserialize,
-            serde::Serialize,
-            sqlx::FromRow,
-            Clone,
-            tailwag::macros::GetTableDefinition,
+            Clone, // Needed to be able to create an editable version from an Arc<Brewery> without affecting the saved data.
+            Debug,
+            serde::Deserialize,                  // Needed for API de/serialization
+            serde::Serialize,                    // Needed for API de/serialization
+            sqlx::FromRow,                       // Needed for DB connectivity
+            tailwag::macros::GetTableDefinition, // Creates the data structure needed for the ORM to work.
+            tailwag::macros::Insertable,
             tailwag::macros::Updateable,
             tailwag::macros::Deleteable,
-            tailwag::macros::Insertable,
-            Debug,
             tailwag::macros::BuildRoutes, // Creates the functions needed for a REST service (full CRUD)
+            tailwag::macros::Id,
             tailwag::macros::AsEguiForm, // Renders the object into an editable form for an egui application.
+            tailwag::forms::macros::GetForm,
         )]
         $i
     };
