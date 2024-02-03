@@ -41,10 +41,10 @@ pub fn get_qualified_path(typepath: &TypePath) -> String {
 
 pub fn is_option(field: &Field) -> bool {
     if let syn::Type::Path(typepath) = &field.ty {
-        match get_qualified_path(typepath).as_str() {
-            "std::option::Option" | "core::option::Option" | "option::Option" | "Option" => true,
-            _ => false,
-        }
+        matches!(
+            get_qualified_path(typepath).as_str(),
+            "std::option::Option" | "core::option::Option" | "option::Option" | "Option"
+        )
     } else {
         false
     }
@@ -53,7 +53,9 @@ pub fn is_option(field: &Field) -> bool {
 /// Gives you the primary type of the field. If it's an Option, then this will return the qualified path string for the Option's inner type.
 /// If not, it returns the qualified path string for the entire type.
 pub fn extract_option_type(field: &Field) -> String {
-    let syn::Type::Path(typepath) = &field.ty else {panic!("No typepath found")};
+    let syn::Type::Path(typepath) = &field.ty else {
+        panic!("No typepath found")
+    };
     let qualified_path = field.get_qualified_path();
     match qualified_path.as_str() {
         "std::option::Option" | "core::option::Option" | "option::Option" | "Option" => {

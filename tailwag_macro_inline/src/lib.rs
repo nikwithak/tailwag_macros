@@ -13,9 +13,11 @@ macro_rules! derive_magic {
             tailwag::macros::Insertable,
             tailwag::macros::Updateable,
             tailwag::macros::Deleteable,
+            tailwag::macros::Filterable,
             tailwag::macros::BuildRoutes, // Creates the functions needed for a REST service (full CRUD)
             tailwag::macros::Id,
             tailwag::macros::AsEguiForm, // Renders the object into an editable form for an egui application.
+            tailwag::macros::Display,
             tailwag::forms::macros::GetForm,
         )]
         $i

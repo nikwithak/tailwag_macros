@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{Data, DeriveInput, Field, Ident};
+use syn::{Data, DeriveInput, Field, Ident, Type};
 
 use crate::util::attribute_parsing::GetAttribute;
 
@@ -11,7 +11,9 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
         ..
     } = &input;
     // Panic with error message if we get a non-struct
-    let Data::Struct(data) = data else { panic!("Only Structs are supported") };
+    let Data::Struct(data) = data else {
+        panic!("Only Structs are supported")
+    };
 
     match &data.fields {
         syn::Fields::Named(fields) => {
@@ -29,6 +31,7 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
                 .iter()
                 .map(|f| f.ident.as_ref().expect("Found missing ident for field: {}"))
                 .collect();
+            let field_types_filtered: Vec<&Type> = fields_filtered.iter().map(|f| &f.ty).collect();
 
             let parse_args_impl_tokens = quote!(
                 impl<'a> tailwag::web::traits::rest_api::BuildCreateRoute<'a> for #ident
@@ -36,7 +39,7 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
                     fn build_create_route() -> axum::Router {
                         #[derive(serde::Deserialize)]
                         pub struct Request {
-                            #(#fields_filtered),*
+                            #(#field_names_filtered: #field_types_filtered),*
                         }
                         impl Into<#ident> for Request {
                             fn into(self) -> #ident {

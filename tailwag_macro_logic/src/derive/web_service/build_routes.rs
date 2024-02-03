@@ -31,6 +31,8 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
                 .iter()
                 .map(|f| f.ident.as_ref().expect("Found missing ident for field: {}"))
                 .collect();
+            let field_types_filtered: Vec<&syn::Type> =
+                fields_filtered.iter().map(|f| &f.ty).collect();
 
             let parse_args_impl_tokens = quote!(
                 #[axum::async_trait]
@@ -41,7 +43,7 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
                     ) -> axum::Router {
                         #[derive(serde::Deserialize)]
                         pub struct Request {
-                            #(#fields_filtered),*
+                            #(#field_names_filtered: #field_types_filtered),*
                         }
                         impl Into<#ident> for Request {
                             fn into(self) -> #ident {

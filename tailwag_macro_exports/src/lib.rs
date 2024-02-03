@@ -46,7 +46,7 @@ pub fn derive_to_form(input: proc_macro::TokenStream) -> proc_macro::TokenStream
     impl_trait_tokens.into()
 }
 
-#[proc_macro_derive(Display)]
+#[proc_macro_derive(Display, attributes(display))]
 pub fn derive_display(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input);
     let impl_trait_tokens = tailwag_macro_logic::derive::display::derive_display(&input);
