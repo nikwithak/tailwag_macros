@@ -38,7 +38,7 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
                 #[axum::async_trait]
                 impl tailwag::web::traits::rest_api::BuildRoutes<#ident> for #ident
                 {
-                    async fn build_routes(
+                    fn build_routes(
                         data_manager: tailwag::orm::data_manager::PostgresDataProvider<#ident>,
                     ) -> axum::Router {
                         #[derive(serde::Deserialize)]
@@ -98,7 +98,6 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
                             // let item = data_manager.delete( item).await.expect("Unable to delete object");
                         }
 
-                        data_manager.run_migrations().await.expect("Failed to run migrations");
                         axum::Router::new()
                             .route("/", axum::routing::method_routing::post(post_item))
                             .route("/", axum::routing::method_routing::get(get_items))
