@@ -4,20 +4,21 @@ pub use tailwag_macro_inline::*;
 #[cfg(features = "no_orm")]
 panic!("Cannot have both orm & no_orm features enabled");
 
-#[cfg(feature = "orm")]
+// #[cfg(feature = "orm")]
 pub use tailwag_orm_macros;
-#[cfg(feature = "orm")]
+// #[cfg(feature = "orm")]
 mod orm {
     pub use tailwag_orm_macros::*;
 }
-#[cfg(feature = "orm")]
+// #[cfg(feature = "orm")]
 pub use orm::*;
 
-#[cfg(feature = "orm")]
+// #[cfg(feature = "gui")]
 mod gui {
     pub use tailwag_macro_exports::AsEguiForm;
     pub use tailwag_macro_exports::IntoForm;
 }
+// #[cfg(feature = "gui")]
 pub use gui::*;
 
 pub use tailwag_macro_exports::Deref;

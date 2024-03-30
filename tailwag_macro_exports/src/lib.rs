@@ -53,7 +53,7 @@ pub fn derive_display(input: proc_macro::TokenStream) -> proc_macro::TokenStream
     impl_trait_tokens.into()
 }
 
-#[proc_macro_derive(BuildRoutes)]
+#[proc_macro_derive(BuildRoutes, attributes(actions))]
 pub fn derive_build_routes(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input);
     let impl_trait_tokens = tailwag_macro_logic::derive::build_routes::derive_struct(&input);
