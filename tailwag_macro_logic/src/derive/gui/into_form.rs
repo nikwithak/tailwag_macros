@@ -10,9 +10,10 @@ fn build_form_items(input: &DeriveInput) -> Vec<TokenStream> {
         data,
         ..
     } = &input;
-    let Data::Struct(data) = data else { panic!("Only Structs are supported.")
+    let Data::Struct(data) = data else {
+        panic!("Only Structs are supported.")
     };
-    let syn::Fields::Named(fields) =  &data.fields else {
+    let syn::Fields::Named(fields) = &data.fields else {
         panic!("Unnamed fields found in the struct.")
     };
     let form_items = fields
@@ -27,7 +28,7 @@ fn build_form_items(input: &DeriveInput) -> Vec<TokenStream> {
                 .to_string();
 
             let qualified_path = field.get_qualified_path_for_option();
-            let is_option = is_option(&field);
+            let is_option = is_option(field);
             let initial_val_tokens = match is_option {
                 true => quote!(self.#ident.unwrap_or_default()),
                 false => quote!(self.#ident),

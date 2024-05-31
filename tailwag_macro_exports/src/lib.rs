@@ -53,7 +53,7 @@ pub fn derive_display(input: proc_macro::TokenStream) -> proc_macro::TokenStream
     impl_trait_tokens.into()
 }
 
-#[proc_macro_derive(BuildRoutes, attributes(actions))]
+#[proc_macro_derive(BuildRoutes, attributes(actions, views, get, post, patch, delete, get_detail))]
 pub fn derive_build_routes(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input);
     let impl_trait_tokens = tailwag_macro_logic::derive::build_routes::derive_struct(&input);
@@ -61,17 +61,16 @@ pub fn derive_build_routes(input: proc_macro::TokenStream) -> proc_macro::TokenS
 }
 
 /// Wraps a function with inputs/outputs for a `syn` / `quote`
+#[proc_macro_derive(DerefMut, attributes(deref))]
+pub fn derive_deref_mut(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input);
+    let impl_trait_tokens = tailwag_macro_logic::derive::deref::derive_deref_mut(&input);
+    impl_trait_tokens.into()
+}
+/// Wraps a function with inputs/outputs for a `syn` / `quote`
 #[proc_macro_derive(Deref, attributes(deref))]
 pub fn derive_deref(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input);
     let impl_trait_tokens = tailwag_macro_logic::derive::deref::derive_deref(&input);
-    impl_trait_tokens.into()
-}
-
-#[cfg(feature = "orm")] // TODO: I should really just yank it to separate crates
-#[proc_macro_derive(BuildCrudRoutes)]
-pub fn derive_build_crud_routes(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let input = parse_macro_input!(input);
-    let impl_trait_tokens = tailwag_macro_logic::derive::build_routes::derive_struct(&input);
     impl_trait_tokens.into()
 }

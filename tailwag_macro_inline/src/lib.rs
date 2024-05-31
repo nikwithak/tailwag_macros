@@ -17,7 +17,7 @@ macro_rules! derive_magic {
             tailwag::macros::Filterable,
             tailwag::macros::BuildRoutes, // Creates the functions needed for a REST service (full CRUD)
             tailwag::macros::Id,
-            tailwag::macros::AsEguiForm, // Renders the object into an editable form for an egui application.
+            // tailwag::macros::AsEguiForm, // Renders the object into an editable form for an egui application.
             tailwag::macros::Display,
             tailwag::forms::macros::GetForm,
         )]
@@ -36,4 +36,22 @@ macro_rules! impl_deref {
             }
         }
     };
+}
+
+#[macro_export]
+macro_rules! time_exec {
+    ($block:expr) => {{
+        let now = std::time::Instant::now();
+        let result = $block;
+        let elapsed = now.elapsed();
+        println!("Timed at {:.2?}", elapsed);
+        result
+    }};
+    ($name:literal, $block:expr) => {{
+        let now = std::time::Instant::now();
+        let result = $block;
+        let elapsed = now.elapsed();
+        println!("[{}]: Timed at {:.2?}", $name, elapsed);
+        result
+    }};
 }

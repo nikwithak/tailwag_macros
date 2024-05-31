@@ -22,6 +22,7 @@ mod gui {
 pub use gui::*;
 
 pub use tailwag_macro_exports::Deref;
+pub use tailwag_macro_exports::DerefMut;
 pub use tailwag_macro_exports::Display;
 pub use tailwag_macro_exports::FromStr;
 
