@@ -5,6 +5,7 @@ name = "tailwag_macro_logic"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
+description = "The logic for A collection of macros to support the tailwag crate"
 repository = "https://github.com/nikwithak/tailwag_macros"
 
 [features]
