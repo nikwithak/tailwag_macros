@@ -94,7 +94,7 @@ pub fn derive_deref_mut(input: &DeriveInput) -> TokenStream {
 
     let ident_string = ident.to_string();
     // If it's a fieldless struct, we simply deref the name of the struct.
-    let (target_ident, target_type) = target.unwrap_or((quote!(#ident_string), quote!(str)));
+    let (target_ident, _target_type) = target.unwrap_or((quote!(#ident_string), quote!(str)));
 
     // TODO: Time for generics!
     let tokens = quote!(
