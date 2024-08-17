@@ -64,6 +64,7 @@ pub fn derive_display(input: proc_macro::TokenStream) -> proc_macro::TokenStream
         delete,
         get_detail,
         get_policy,
+        post_policy,
         list_policy,
         delete_policy,
         patch_policy,
