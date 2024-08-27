@@ -31,6 +31,15 @@ fn get_route_paths(expr: Expr) -> (String, Ident, TokenStream) {
             _ => None,
         })
     }
+    fn get_next_path(items: &mut syn::punctuated::Iter<Expr>) -> Option<syn::Path> {
+        items.next().and_then(|item| match item {
+            Expr::Path(ExprPath {
+                path,
+                ..
+            }) => Some(path.clone()),
+            _ => None,
+        })
+    }
     let default_policy = quote!(tailwag::web::application::http::route::RoutePolicy::default());
     match expr {
         Expr::Path(path) => {
@@ -43,7 +52,7 @@ fn get_route_paths(expr: Expr) -> (String, Ident, TokenStream) {
             let func_path =
                 get_next_ident(&mut items).expect("Invalid function provided for route.");
             let route_policy: TokenStream =
-                get_next_ident(&mut items).map_or(default_policy, |policy| quote!(#policy));
+                get_next_path(&mut items).map_or(default_policy, |policy| quote!(#policy));
             (path, func_path, route_policy)
         },
         _ => todo!(),
