@@ -3,7 +3,7 @@ proc-macro = true
 
 [package]
 name = "tailwag_macro_exports"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nikwithak/tailwag_macros"
@@ -12,7 +12,7 @@ description = "A collection of macros to support the tailwag crate"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tailwag_macro_logic = { version = "0.1.0", path = "../tailwag_macro_logic" }
+tailwag_macro_logic = { version = "0.2.0", path = "../tailwag_macro_logic" }
 
 syn = "2.0.31"
 
