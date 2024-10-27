@@ -1,7 +1,7 @@
 pub use tailwag_macro_inline::*;
 
 #[cfg(feature = "orm")]
-#[cfg(features = "no_orm")]
+#[cfg(feature = "no-orm")]
 panic!("Cannot have both orm & no_orm features enabled");
 
 // #[cfg(feature = "orm")]
