@@ -107,7 +107,7 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
     // Default CRUD routes. Can be overridden with #[get(func_name)]
     let get_list_route_tokens = input
         .get_attribute("get")
-        .map(|attr| attr.parse_args::<Ident>().expect("Unable to pare get attribute"))
+        .map(|attr| attr.parse_args::<Path>().expect("Unable to parse get attribute"))
         .map(|func_name| quote!(.get_with_policy("/", #func_name, #list_policy)))
         .unwrap_or(quote!(
             .get_with_policy(
