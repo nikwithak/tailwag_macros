@@ -1,9 +1,7 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{punctuated::Punctuated, DeriveInput, Expr, ExprLit, ExprPath, Ident, Lit, Path, Token};
-use tailwag_utils::strings::ToSnakeCase;
-
-use crate::util::attribute_parsing::GetAttribute;
+use tailwag_utils::macro_utils::attribute_parsing::GetAttribute;
 
 /// Helper function for extracting the route paths from an attribute.
 ///
@@ -122,7 +120,7 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
     let get_policy = extract_policy!("get_policy");
     let get_detail_route_tokens = input
         .get_attribute("get_id")
-        .map(|attr| attr.parse_args::<Ident>().unwrap())
+        .map(|attr| attr.parse_args::<Path>().unwrap())
         .map(|func_name| quote!(.get_with_policy("/{id}", #func_name, #get_policy)))
         .unwrap_or(quote!(
             .with_handler(
@@ -159,7 +157,7 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
     let patch_policy = extract_policy!("patch_policy");
     let patch_edit_route_tokens = input
         .get_attribute("patch")
-        .map(|attr| attr.parse_args::<Ident>().unwrap())
+        .map(|attr| attr.parse_args::<Path>().unwrap())
             // TODO: Fix this to take /{id} instead of the whole item
         .map(|func_name| quote!(.patch_with_policy("/", #func_name, #patch_policy)))
         .unwrap_or(quote!(
@@ -176,8 +174,8 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
     let delete_policy = extract_policy!("delete_policy");
     let delete_route_tokens  = input
         .get_attribute("delete")
-        .map(|attr| attr.parse_args::<Ident>().unwrap())
-        .map(|func_name| quote!(.delete_with_policy("/", #func_name, #delete_policy)))
+        .map(|attr| attr.parse_args::<Path>().unwrap())
+        .map(|func_name| quote!(.delete_with_policy("/{id}", #func_name, #delete_policy)))
         .unwrap_or(quote!(
             // TODO: Fix this to take /{id} instead of the whole item
             .delete_with_policy(
@@ -189,8 +187,6 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
             )
         )
     );
-
-    let _route_path = ident.to_string().to_snake_case().to_string();
     let parse_args_impl_tokens = quote!(
         impl tailwag::web::traits::rest_api::BuildRoutes<#ident> for #ident
         {

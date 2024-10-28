@@ -56,13 +56,14 @@ pub fn derive_display(input: proc_macro::TokenStream) -> proc_macro::TokenStream
 #[proc_macro_derive(
     BuildRoutes,
     attributes(
+        no_default_routes,
         actions,
         views,
-        get,
+        get, // Should I rename this to `list`?
+        get_id, // Likewise, should this be `get`? Or `get_detail`? Goal is to reduce confusion as much as possible.
         post,
         patch,
         delete,
-        get_detail,
         get_policy,
         post_policy,
         list_policy,
