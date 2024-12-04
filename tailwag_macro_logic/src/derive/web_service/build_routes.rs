@@ -9,7 +9,10 @@ use tailwag_utils::macro_utils::attribute_parsing::GetAttribute;
 ///
 /// #[actions("/nested/path/to/", handler_fn)] // Creates a route at `/{item_name}/nested/path/to`
 /// #[actions(func_name)] // Creates a route at `/{item_name}/func_name`
-fn get_route_paths(expr: Expr) -> (String, Ident, TokenStream) {
+fn get_route_paths(
+    expr: Expr,
+    policy_tokens: TokenStream,
+) -> (String, Ident, TokenStream) {
     // Extract the actual attributes
     fn get_next_ident(items: &mut syn::punctuated::Iter<Expr>) -> Option<Ident> {
         items.next().and_then(|item| match item {
@@ -38,7 +41,7 @@ fn get_route_paths(expr: Expr) -> (String, Ident, TokenStream) {
             _ => None,
         })
     }
-    let default_policy = quote!(tailwag::web::application::http::route::RoutePolicy::default());
+    let default_policy = policy_tokens;
     match expr {
         Expr::Path(path) => {
             let ident = path.path.get_ident().cloned().expect("Path is not a valid identifier");
@@ -67,13 +70,22 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
         input: &DeriveInput,
         attr_name: &str,
     ) -> (Vec<String>, Vec<Ident>, Vec<TokenStream>) {
+        let default_policy = input
+            .get_attribute("policy")
+            .map(|attr| {
+                attr.parse_args::<TokenStream>().expect("Invalid default policy `#[policy(_)]`")
+            })
+            .map_or(
+                quote!(tailwag::web::application::http::route::RoutePolicy::default()),
+                |ident| quote!(#ident),
+            );
         input
             .get_attribute(attr_name)
             .map(|attr| {
                 attr.parse_args_with(Punctuated::<Expr, Token![,]>::parse_terminated).unwrap()
             })
             .map(|params| {
-                params.into_iter().map(get_route_paths).fold(
+                params.into_iter().map(|p| get_route_paths(p, default_policy.clone())).fold(
                     (Vec::new(), Vec::new(), Vec::new()),
                     |(mut paths, mut funcs, mut policies), (path, func, route_policy)| {
                         paths.push(path);
@@ -89,13 +101,20 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
     let (action_paths, actions, action_policies) = extract_routes_from_attribute(input, "actions");
     let (views_paths, views, view_policies) = extract_routes_from_attribute(input, "views");
 
+    let default_policy = input
+        .get_attribute("policy")
+        .map(|attr| attr.parse_args::<TokenStream>().expect("Invalid default policy"))
+        .map_or(
+            quote!(tailwag::web::application::http::route::RoutePolicy::default()),
+            |ident| quote!(#ident),
+        );
     macro_rules! extract_policy {
         ($name:literal) => {
             input
                 .get_attribute($name)
                 .map(|attr| attr.parse_args::<syn::Path>().expect("Invalid list policy"))
                 .map_or(
-                    quote!(tailwag::web::application::http::route::RoutePolicy::default()),
+                    default_policy.clone(),
                     |ident| quote!(#ident),
                 )
         };
