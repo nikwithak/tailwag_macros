@@ -9,7 +9,7 @@ macro_rules! derive_magic {
             Default,
             serde::Deserialize,                  // Needed for API de/serialization
             serde::Serialize,                    // Needed for API de/serialization
-            sqlx::FromRow,                       // Needed for DB connectivity
+            // sqlx::FromRow,                       // Needed for DB connectivity
             tailwag::macros::GetTableDefinition, // Creates the data structure needed for the ORM to work.
             tailwag::macros::Insertable,
             tailwag::macros::Updateable,
