@@ -61,6 +61,7 @@ fn get_route_paths(
 }
 
 pub fn derive_struct(input: &DeriveInput) -> TokenStream {
+    // This whole function is a spaghetti mess. When I have time to refactdor this, I need to rework how I handle default routes and generate CRUD endpoints.
     let &DeriveInput {
         ident,
         ..
@@ -100,6 +101,7 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
 
     let (action_paths, actions, action_policies) = extract_routes_from_attribute(input, "actions");
     let (views_paths, views, view_policies) = extract_routes_from_attribute(input, "views");
+    let skip_default_routes = input.get_attribute("no_default_routes").is_some();
 
     let default_policy = input
         .get_attribute("policy")
@@ -126,35 +128,43 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
         .get_attribute("get")
         .map(|attr| attr.parse_args::<Path>().expect("Unable to parse get attribute"))
         .map(|func_name| quote!(.get_with_policy("/", #func_name, #list_policy)))
-        .unwrap_or(quote!(
-            .get_with_policy(
-                "/",
-                |provider: tailwag::orm::data_manager::PostgresDataProvider<Self>| async move {
-                    provider.all().await.unwrap().collect::<Vec<_>>()
-                },
-                #list_policy
-            )
-        ));
+        .unwrap_or({
+            if skip_default_routes { quote!()} else {
+                quote!(
+                    .get_with_policy(
+                        "/",
+                        |provider: tailwag::orm::data_manager::PostgresDataProvider<Self>| async move {
+                            provider.all().await.unwrap().collect::<Vec<_>>()
+                        },
+                        #list_policy
+                    )
+                )
+            }
+        });
 
     let get_policy = extract_policy!("get_policy");
     let get_detail_route_tokens = input
         .get_attribute("get_id")
         .map(|attr| attr.parse_args::<Path>().unwrap())
         .map(|func_name| quote!(.get_with_policy("/{id}", #func_name, #get_policy)))
-        .unwrap_or(quote!(
-            .with_handler(
-                tailwag::web::application::http::route::HttpMethod::Get,
-                "/{id}",
-                |tailwag::web::application::http::route::PathVariable(id): tailwag::web::application::http::route::PathString, provider: tailwag::orm::data_manager::PostgresDataProvider<Self>|{
-                    use tailwag::orm::queries::filterable_types::FilterEq;
-                    async move {
-                        let id = uuid::Uuid::parse_str(&id).ok()?;
-                        provider.get(|item|item.id.eq(id)).await.ok()
-                    }
-                },
-                #get_policy
-            )
-        )
+        .unwrap_or({
+            if skip_default_routes { quote!()} else {
+                quote!(
+                    .with_handler(
+                        tailwag::web::application::http::route::HttpMethod::Get,
+                        "/{id}",
+                        |tailwag::web::application::http::route::PathVariable(id): tailwag::web::application::http::route::PathString, provider: tailwag::orm::data_manager::PostgresDataProvider<Self>|{
+                            use tailwag::orm::queries::filterable_types::FilterEq;
+                            async move {
+                                let id = uuid::Uuid::parse_str(&id).ok()?;
+                                provider.get(|item|item.id.eq(id)).await.ok()
+                            }
+                        },
+                        #get_policy
+                    )
+                )
+            }
+        }
     );
 
     let post_policy = extract_policy!("post_policy");
@@ -162,16 +172,19 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
         .get_attribute("post")
         .map(|attr| attr.parse_args::<Path>().unwrap())
         .map(|func_name| quote!(.post_with_policy("/", #func_name, #post_policy)))
-        .unwrap_or(quote!(
-            .post_with_policy(
-                "/",
-                |item: <Self as tailwag::orm::queries::Insertable>::CreateRequest, provider: tailwag::orm::data_manager::PostgresDataProvider<Self>| async move {
-                    provider.create(item.into()).await.unwrap()
-                },
-                #post_policy
-            )
-        )
-    );
+        .unwrap_or({
+            if skip_default_routes { quote!()} else {
+                quote!(
+                    .post_with_policy(
+                        "/",
+                        |item: <Self as tailwag::orm::queries::Insertable>::CreateRequest, provider: tailwag::orm::data_manager::PostgresDataProvider<Self>| async move {
+                            provider.create(item.into()).await.unwrap()
+                        },
+                        #post_policy
+                    )
+                )
+            }
+        });
 
     let patch_policy = extract_policy!("patch_policy");
     let patch_edit_route_tokens = input
@@ -179,33 +192,40 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
         .map(|attr| attr.parse_args::<Path>().unwrap())
             // TODO: Fix this to take /{id} instead of the whole item
         .map(|func_name| quote!(.patch_with_policy("/", #func_name, #patch_policy)))
-        .unwrap_or(quote!(
-            .patch_with_policy(
-                "/",
-                |item: Self, provider: tailwag::orm::data_manager::PostgresDataProvider<Self>| async move {
-                    provider.update(&item).await.unwrap()
-                },
-                #patch_policy
-            )
-        )
-    );
+        .unwrap_or({
+            if skip_default_routes { quote!()} else {
+                quote!(
+                    .patch_with_policy(
+                        "/",
+                        |item: Self, provider: tailwag::orm::data_manager::PostgresDataProvider<Self>| async move {
+                            provider.update(&item).await.unwrap()
+                        },
+                        #patch_policy
+                    )
+                )
+            }
+        });
 
     let delete_policy = extract_policy!("delete_policy");
     let delete_route_tokens  = input
         .get_attribute("delete")
         .map(|attr| attr.parse_args::<Path>().unwrap())
         .map(|func_name| quote!(.delete_with_policy("/{id}", #func_name, #delete_policy)))
-        .unwrap_or(quote!(
-            // TODO: Fix this to take /{id} instead of the whole item
-            .delete_with_policy(
-                "/",
-                |item: Self, provider: tailwag::orm::data_manager::PostgresDataProvider<Self>| async move {
-                    provider.delete(item).await.unwrap()
-                },
-                #delete_policy
-            )
-        )
-    );
+        .unwrap_or({
+            if skip_default_routes { quote!()} else {
+                // TODO: Fix this to take /{id} instead of the whole item
+                quote!(
+                    .delete_with_policy(
+                        "/",
+                        |item: Self, provider: tailwag::orm::data_manager::PostgresDataProvider<Self>| async move {
+                            provider.delete(item).await.unwrap()
+                        },
+                        #delete_policy
+                    )
+                )
+            }
+        });
+
     let parse_args_impl_tokens = quote!(
         impl tailwag::web::traits::rest_api::BuildRoutes<#ident> for #ident
         {
