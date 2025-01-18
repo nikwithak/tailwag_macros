@@ -12,12 +12,9 @@ readme = "README.md"
 
 [dependencies]
 darling = "0.20.1"
-# tailwag_macro_exports = { version = "0.2.1", path = "tailwag_macro_exports" }
-# tailwag_macro_inline = { version = "0.2.0", path = "tailwag_macro_inline" }
-tailwag_macro_exports = { version = "0.2.1", git = "https://github.com/nikwithak/tailwag_macros", branch = "develop", optional = true }
-tailwag_macro_inline = { version = "0.2.0", git = "https://github.com/nikwithak/tailwag_macros", branch = "develop", optional = true }
-# tailwag_orm_macros = { version = "0.2.0", path = "../orm/macros"}
-tailwag_orm_macros = { version = "0.2.0", git = "https://github.com/nikwithak/tailwag_orm", branch="develop" }
+tailwag_macro_exports = { version = "0.2.1", path = "tailwag_macro_exports" }
+tailwag_macro_inline = { version = "0.2.0", path = "tailwag_macro_inline" }
+tailwag_orm_macros = { version = "0.2.0", path = "../orm/macros"}
 proc-macro2 = "1.0.63"
 quote = "1.0.29"
 syn = { version = "2.0.23", features = ["full"] }
