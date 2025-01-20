@@ -7,14 +7,17 @@ repository = "https://github.com/nikwithak/tailwag_macros"
 description = "A collection of macros to support the tailwag crate"
 readme = "README.md"
 
+[lib]
+proc-macro = true
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 
 [dependencies]
 darling = "0.20.1"
-tailwag_macro_exports = { version = "0.2.1", path = "tailwag_macro_exports" }
-tailwag_macro_inline = { version = "0.2.0", path = "tailwag_macro_inline" }
 tailwag_orm_macros = { version = "0.2.0", path = "../orm/macros"}
+tailwag_orm = { version = "0.2.0", path = "../orm", optional = true }
+tailwag_utils = { version = "0.1.1", path = "../utils" }
 proc-macro2 = "1.0.63"
 quote = "1.0.29"
 syn = { version = "2.0.23", features = ["full"] }
@@ -23,5 +26,5 @@ serde = { version = "1.0.188", features = ["derive"] }
 
 [features]
 default = []
-orm = ["tailwag_macro_exports/orm"]
+orm = ["dep:tailwag_orm"]
 no-orm = []
