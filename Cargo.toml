@@ -1,6 +1,6 @@
 [package]
 name = "tailwag_macros"
-version = "0.2.1"
+version = "0.3.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nikwithak/tailwag_macros"
@@ -15,9 +15,9 @@ proc-macro = true
 
 [dependencies]
 darling = "0.20.1"
-tailwag_orm_macros = { version = "0.2.0", path = "../orm/macros"}
-tailwag_orm = { version = "0.2.0", path = "../orm", optional = true }
-tailwag_utils = { version = "0.1.1", path = "../utils" }
+tailwag_orm_macros = { version = "0.3.0", path = "../orm/macros"}
+tailwag_orm = { version = "0.3.0", path = "../orm", optional = true }
+tailwag_utils = { version = "0.3.0", path = "../utils" }
 proc-macro2 = "1.0.63"
 quote = "1.0.29"
 syn = { version = "2.0.23", features = ["full"] }
