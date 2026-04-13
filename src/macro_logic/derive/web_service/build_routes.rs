@@ -134,6 +134,7 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
                     .get_with_policy(
                         "/",
                         |provider: tailwag::orm::data_manager::PostgresDataProvider<Self>| async move {
+                            // TODO: Remove the unwraps from these impls - replace with explicit error return
                             provider.all().await.unwrap().collect::<Vec<_>>()
                         },
                         #list_policy
@@ -192,6 +193,7 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
         .map(|attr| attr.parse_args::<Path>().unwrap())
             // TODO: Fix this to take /{id} instead of the whole item
         .map(|func_name| quote!(.patch_with_policy("/", #func_name, #patch_policy)))
+
         .unwrap_or({
             if skip_default_routes { quote!()} else {
                 quote!(

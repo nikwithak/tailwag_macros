@@ -1,6 +1,8 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Data, DeriveInput};
+
+#[allow(unused)]
 fn build_function_definition(input: &DeriveInput) -> TokenStream {
     let &DeriveInput {
         ident,
@@ -9,16 +11,18 @@ fn build_function_definition(input: &DeriveInput) -> TokenStream {
     } = &input;
     let _table_name = tailwag_utils::strings::to_snake_case(&ident.to_string());
     let Data::Struct(data) = data else {
-      panic!("Only Structs are supported.")
+        panic!("Only Structs are supported.")
     };
     let syn::Fields::Named(_fields) = &data.fields else {
-      panic!("Unnamed fields found in the struct.")
+        panic!("Unnamed fields found in the struct.")
     };
     let tokens = quote!(
         fn my_function() {}
     );
     tokens
 }
+
+#[allow(unused)]
 pub fn derive_struct(input: &DeriveInput) -> TokenStream {
     let &DeriveInput {
         ident,
@@ -26,8 +30,8 @@ pub fn derive_struct(input: &DeriveInput) -> TokenStream {
         ..
     } = &input;
     let Data::Struct(data) = data else {
-    panic!("Only Structs are supported")
-  };
+        panic!("Only Structs are supported")
+    };
     match &data.fields {
         syn::Fields::Named(fields) => {
             let _field_names = fields.named.iter().map(|f| &f.ident);
